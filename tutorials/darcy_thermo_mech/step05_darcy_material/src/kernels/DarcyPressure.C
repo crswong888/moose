@@ -20,10 +20,11 @@ DarcyPressure::validParams()
   return params;
 }
 
+
 DarcyPressure::DarcyPressure(const InputParameters & parameters)
   : ADDiffusion(parameters),
-    _permeability(getADMaterialProperty<Real>("permeability")),
-    _viscosity(getADMaterialProperty<Real>("viscosity"))
+    _permeability(getMaterialProperty<Real>("permeability")),
+    _viscosity(getMaterialProperty<Real>("viscosity"))
 {
 }
 

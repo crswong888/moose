@@ -9,14 +9,13 @@
 
 #pragma once
 
-// Including the "ADDiffusion" Kernel here so we can extend it
+// Including the "ADDiffusion" Kernel so it can be extended
 #include "ADDiffusion.h"
 
 /**
  * Computes the residual contribution: K / mu * grad_u * grad_phi.
  */
-template <ComputeStage compute_stage>
-class DarcyPressure : public ADDiffusion<compute_stage>
+class DarcyPressure : public ADDiffusion
 {
 public:
   static InputParameters validParams();
@@ -24,12 +23,12 @@ public:
   DarcyPressure(const InputParameters & parameters);
 
 protected:
-  /// ADKernelGrad objects must override
+  /// ADKernelGrad objects must override precomputeQpResidual
   virtual ADRealVectorValue precomputeQpResidual() override;
 
-  /// References to be set from input file
-  const Real & _permeability;
-  const Real & _viscosity;
+  // References to be set from Material system
+  const MaterialProperty<Real> & _permeability;
+  const MaterialProperty<Real> & _viscosity;
 
   usingKernelGradMembers;
 };
