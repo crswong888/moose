@@ -100,12 +100,11 @@ ADCustomObject::validParams()
     params.addParam<Real>("scale", 1, "A scale factor for use when doing something.");
     params.addClassDescription("The ADCustomObject does something with a scale parameter.");
     params;
-)
+}
 
 ADCustomObject::ADCustomObject(const InputParameters & parameters)
   : ADBaseObject(parameters),
     _scale(getParam<Real>("scale"))
-
 {
 }
 

@@ -2,12 +2,7 @@
 
 !---
 
-## Step 13:\\ Oscillating Pressure and Temperature Dependence
-
-Vary the inlet and output pressure:
-
-- Inlet (left): $p = 2000\sin(0.466\pi t)$
-- Outlet (right): $p = 2000\cos(0.466\pi t)$
+## Temperature Dependence
 
 Viscosity, density, thermal conductivity, and specific heat capacity of the fluid are setup to vary
 as a function of temperature.

@@ -1,4 +1,33 @@
-# Step 11: Outflow Boundary Condition id=step11
+# Step 11: Boundary Condition id=step11
+
+!---
+
+Apply two types of boundary conditions for the transient problem:
+
+- Fluctuating inlet/output pressure
+- Outflow boundary condition
+
+!!end-intro
+
+!---
+
+## Fluctuating Inlet/Output Pressure
+
+Vary the inlet and output pressure:
+
+- Inlet (left): $p = 2000\sin(0.466\pi t)$
+- Outlet (right): $p = 2000\cos(0.466\pi t)$
+
+!---
+
+## Step 11: Input File (outflow)
+
+!listing step11_boundary_condition/problems/heat_transient.i
+
+
+!---
+
+## Outflow Boundary Condition
 
 The flow is assumed to exit the pipe into a large tank, which is modeled with the "No BC" boundary
 condition of [!cite](griffiths1997no).
@@ -6,7 +35,7 @@ condition of [!cite](griffiths1997no).
 The boundary term, $-\left < k \nabla T \cdot \mathbf{n}, \psi_i \right >$, is computed implicitly
 rather than being replaced with a known flux, as is done in a `NeumannBC`.
 
-!!end-intro
+!---
 
 
 !---
@@ -23,9 +52,9 @@ rather than being replaced with a known flux, as is done in a `NeumannBC`.
 
 !---
 
-## Step 11: Outflow Input File
+## Step 11: Input File (outflow)
 
-!listing step11_boundary_conditions/problems/heat_transient.i
+!listing step11_boundary_condition/problems/heat_transient_outflow.i
 
 !---
 

@@ -88,13 +88,22 @@ Solve the transient heat equation using the "heat conduction" module.
 !equation
 C \frac{\partial T}{\partial t} - \nabla \cdot k \nabla T = 0
 
-!!!
+!---
 
+## [#step10]
 
+Create a non-uniform initial condition.
 
 !---
 
-## [#step06]
+## [#step11]
+
+The boundary term, $-\left < k \nabla T \cdot \mathbf{n}, \psi_i \right >$, is computed implicitly
+rather than being replaced with a known flux, as is done in a `NeumannBC`.
+
+!---
+
+## [#step12]
 
 Solve the pressure and temperature in a coupled system of equations by adding the advection term
 to the heat equation.
@@ -103,6 +112,15 @@ to the heat equation.
 -\nabla \cdot \frac{\mathbf{K}}{\mu} \nabla p  = 0
 \\
 C\left( \frac{\partial T}{\partial t} + \epsilon \vec{u}\cdot\nabla T \right) - \nabla \cdot k \nabla T = 0
+
+!---
+
+## [#step13]
+
+Add temperature dependence to material properties.
+
+
+!!!
 
 !---
 
