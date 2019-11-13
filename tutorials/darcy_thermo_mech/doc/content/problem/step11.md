@@ -20,7 +20,7 @@ Vary the inlet and output pressure:
 
 !---
 
-## Step 11: Input File (outflow)
+## Step 11: Input File
 
 !listing step11_boundary_condition/problems/heat_transient.i
 

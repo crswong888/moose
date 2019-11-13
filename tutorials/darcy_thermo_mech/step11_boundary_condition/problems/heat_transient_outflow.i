@@ -26,7 +26,7 @@
 
 [BCs]
   [inlet_temperature]
-    type = DirichletBC
+    type = zDirichletBC
     variable = temperature
     boundary = left
     value = 350 # (K)

@@ -51,29 +51,18 @@
   []
 []
 
-[Functions]
-  [inlet_function]
-    type = ParsedFunction
-    value = 2000*sin(0.466*pi*t) # Inlet signal from Fig. 3
-  []
-  [outlet_function]
-    type = ParsedFunction
-    value = 2000*cos(0.466*pi*t) # Outlet signal from Fig. 3
-  []
-[]
-
 [BCs]
   [inlet]
-    type = FunctionDirichletBC
+    type = DirichletBC
     variable = pressure
     boundary = left
-    function = inlet_function
+    value = 4000 # (Pa) From Figure 2 from paper.  First data point for 1mm spheres.
   []
   [outlet]
-    type = FunctionDirichletBC
+    type = DirichletBC
     variable = pressure
     boundary = right
-    function = outlet_function
+    value = 0 # (Pa) Gives the correct pressure drop from Figure 2 for 1mm spheres
   []
   [inlet_temperature]
     type = FunctionDirichletBC
@@ -91,13 +80,8 @@
 [Materials]
   [column]
     type = PackedColumn
-    radius = 1
     temperature = temperature
-    fluid_viscosity_file = data/water_viscosity.csv
-    fluid_density_file = data/water_density.csv
-    fluid_thermal_conductivity_file = data/water_thermal_conductivity.csv
-    fluid_specific_heat_file = data/water_specific_heat.csv
-    outputs = exodus
+    radius = 1
   []
 []
 
@@ -124,7 +108,7 @@
 
   [TimeStepper]
     type = FunctionDT
-    function = 'if(t<0,0.1,(2*pi/(0.466*pi))/16)' # dt to always hit the peaks of sine/cosine BC
+    function = 'if(t<0,0.1,0.25)'
   []
 []
 

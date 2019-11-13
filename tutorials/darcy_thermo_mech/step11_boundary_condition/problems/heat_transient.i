@@ -26,15 +26,16 @@
 
 [BCs]
   [inlet_temperature]
-    type = DirichletBC
+    type = FunctionDirichletBC
     variable = temperature
     boundary = left
-    value = 350 # (K)
+    function = '2000*sin(0.466*pi*t)'
   []
   [outlet_temperature]
-    type = HeatConductionOutflow
+    type = FunctionDirichletBC
     variable = temperature
     boundary = right
+    function = '2000*cos(0.466*pi*t)'
   []
 []
 

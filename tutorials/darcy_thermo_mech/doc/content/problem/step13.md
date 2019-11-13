@@ -1,32 +1,47 @@
-# Step 13: Material Coupling
+# Step 13: Material Coupling id=step13
 
 !---
 
 ## Temperature Dependence
 
-Viscosity, density, thermal conductivity, and specific heat capacity of the fluid are setup to vary
-as a function of temperature.
++Viscosity+, +density+, +thermal conductivity+, and +specific heat capacity+ of the fluid are
+all depend on temperature.
 
+This dependence is added by adding an optional lookup table that contains a relationship
+between temperature and the desired value.
+
+
+!---
+
+## PackedColumn.h
+
+!listing step13_material_coupling/include/materials/PackedColumn.h
+
+!---
+
+## PackedColumn.C
+
+!listing step13_material_coupling/src/materials/PackedColumn.C
 
 !---
 
 ## Step 13: Input File
 
-!listing step06_coupled_darcy_heat_conduction/problems/step6b_transient_inflow.i
+!listing step13_material_coupling/problems/coupled.i
 
 !---
 
-## Step 6b: Run and Visualize with Peacock
+## Step 13: Run and Visualize with Peacock
 
 ```bash
-cd ~/projects/moose/tutorials/darcy-thermo_mech/step06_coupled_darcy_heat_conduction
+cd ~/projects/moose/tutorials/darcy-thermo_mech/step13_material_coupling
 make -j 12 # use number of processors for you system
 cd problems
-~/projects/moose/python/peacock/peacock -i step6b_transient_inflow.i
+~/projects/moose/python/peacock/peacock -i coupled.i
 ```
 
 !---
 
-## Step 6b: Results
+## Step 13: Results
 
-!media step06b_result.mp4
+!!media step13_result.mp4
