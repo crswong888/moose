@@ -4,13 +4,15 @@ This page includes examples and tutorials intended to introduce the basics of [!
 
 ## How to Use This Manual id=how-to
 
-While it is generally assumed that the reader has some background in computer programming, specifically, with C/C++, we will refer them to helpful pages located elsewhere on our website throughout the tutorials. We have also provided an entire chapter dedicated to the basics of object-oriented programming and C++ coding at the end of this manual for anyone not familiar with these topics or needs a refresher. For those of you who have no interest in application development, and simply wish to use our free software to solve problems or conduct research, it is still highly recommended that you follow this guide and consider taking on the challenge of contributing to the framework.
+While it is generally assumed that the reader has some background in computer programming, specifically, with C/C++, they will be referred to helpful pages located elsewhere on the MOOSE website throughout the tutorials. There is also an entire chapter dedicated to the basics of object-oriented programming and C++ coding at the end of this manual for anyone not familiar with these topics or needs a refresher. For those who have no interest in application development, and simply wish to use this free software to solve problems or conduct research, it is still highly recommended that they follow this guide and consider taking on the challenge of contributing to the framework.
+
+This manual is broken up into parts, which are further divided into individual chapters (see [#TOC]).
 
 !!!
 *need to explain a few more things here* :
 
 The navigation should be natural, the "breadcrumbs" as the top, contents sections, and if
-needed we can add some next/back buttons at the buttom of the pages (but lets use what we have
+needed we can add some next/back buttons at the bottom of the pages (but lets use what we have
 for now)
 
 Please add links to these two things:
@@ -19,13 +21,15 @@ Please add links to these two things:
 - we are always available to contact (google groups)
 !!!
 
-## Examples and Tutorials
+## Examples and Tutorials id=TOC
 
-!! List the preface and all the tutorials and examples here
+- [Preface](preface.md)
+- [Coupled Darcy Flow and Thermomechanics Tutorial](/darcy_thermo_mech/index.md)
+- [Example Problems](/examples/index.md)
 
 ## Live Workshops id=lws
 
-The  [!ac](MOOSE) development team at [!ac](INL) will occasionally host live workshops at [!ac](INL) and around the world. Registration is open for all who wish to attend, although space is typically limited. !! Please subscribe to the...
+The [!ac](MOOSE) development team at [!ac](INL) will occasionally host live workshops at [!ac](INL) and around the world. Registration is open for all who wish to attend, although space is typically limited. !! Please subscribe to the...
 
 !!!
 *need to explain a few more things here* :
@@ -37,6 +41,6 @@ The  [!ac](MOOSE) development team at [!ac](INL) will occasionally host live wor
 
 ## Helpful Software id=helpful-software
 
-A text editor is necessary for creating application files. There are many options available, so please feel free to chose an any editor that meets your needs. A popular option for application developers is [Atom](https://atom.io), which has community developed add-ons specifically for MOOSE: [Atom_Editor.md].
+A text editor is necessary for creating application files. There are many options available, so please feel free to chose an any editor that meets your needs. A popular option for application developers is [Atom](https://atom.io), which has community developed add-ons specifically for MOOSE: [Atom Editor for MOOSE](Atom_Editor.md).
 
 A graphical post-processor, particularly one that can read ExodusII files, is also necessary. [!ac](MOOSE) includes a [!ac](GUI): [PEACOCK](application_usage/peacock.md). Another popular tool is [ParaView](https://www.paraview.org/). Both of these applications are free and will allow you to visualize and process the results of your problems.

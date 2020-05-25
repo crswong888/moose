@@ -1,9 +1,11 @@
 AD: automatic differentiation
 API: Application Programming Interface
+BVP: boundary value problem
 CIVET: Continuous Integration for Verification, Enhancement, and Testing
 DOE: Department of Energy
 DOE-NE: Department of Energy, Nuclear Energy
 DOF: degree-of-freedom
+DOFs: degrees-of-freedom
 FE: Finite Element
 FEM: Finite Element Method
 GMRES: Gernalized Minimum Residual Method
