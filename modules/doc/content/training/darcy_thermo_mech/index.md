@@ -20,18 +20,18 @@ We need have a simple command for building the contents, the `!content list` com
 !!!
 
 - [Problem Statement](problem_statement.md)
-- [Step 1: Creating and Executing a MOOSE Object](step01.md)
+- [Step 1: Creating and Executing a MOOSE Object](step01_moose_object.md)
 
-  - [Statement of Physics](step01.md#physics)
-  - [MOOSE Objects](step01.md#physics)
-  - [Input Files](step01.md#inputs)
+  - [Statement of Physics](step01_moose_object.md#physics)
+  - [MOOSE Objects](step01_moose_object.md#physics)
+  - [Input Files](step01_moose_object.md#inputs)
 
-    - [Execute an Input File](step01.md#execute)
+    - [Execute an Input File](step01_moose_object.md#execute)
 
-  - [Demonstration](step01.md#demo)
+  - [Demonstration](step01_moose_object.md#demo)
 
-    - [Input File](step01.md#input-demo)
-    - [Results](step01.md#results-demo)
+    - [Input File](step01_moose_object.md#input-demo)
+    - [Results](step01_moose_object.md#results-demo)
 
 - <!--[Step 2: Generate a Weak Form and Create a Kernel Object]--> *To be continued...*
 

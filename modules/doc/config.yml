@@ -32,7 +32,7 @@ Extensions:
         google-cse: 000781241768298771085:pedtnlxdkx8
         menu:
             Getting Started: getting_started/index.md
-            Examples: examples.menu.md
+            Training: training.menu.md
             Documentation: documentation.menu.md
             Help: help.menu.md
             News: newsletter/index.md
