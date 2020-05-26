@@ -2,11 +2,7 @@
 
 This page includes examples and tutorials intended to introduce the basics of [!ac](MOOSE) for creating custom applications to solve unique and challenging multiphysics problems. Each example or tutorial focuses on different aspects MOOSE, primarily the fundamental C++ classes that are available to solve multiphysics problems.
 
-## How to Use This Manual id=how-to
-
-While it is generally assumed that the reader has some background in computer programming, specifically, with C/C++, they will be referred to helpful pages located elsewhere on the MOOSE website throughout the tutorials. There is also an entire chapter dedicated to the basics of object-oriented programming and C++ coding at the end of this manual for anyone not familiar with these topics or needs a refresher. For those who have no interest in application development, and simply wish to use this free software to solve problems or conduct research, it is still highly recommended that they follow this guide and consider taking on the challenge of contributing to the framework.
-
-This manual is broken up into parts, which are further divided into individual chapters (see [#TOC]).
+It is assumed that the reader has some background in computer programming, specifically with C++. The links provided in [#programming] provide additional information for those who need to a refresher on C++.
 
 !!!
 *need to explain a few more things here* :
@@ -37,6 +33,15 @@ The [!ac](MOOSE) development team at [!ac](INL) will occasionally host live work
 - how do we usually announce this? (email and website)
 - how often (more exactly) do we run these? (2 to 3 times per year)
 - how can some be sure they find out when one is happening? mailing list? moose-announce google group? (mailing list)
+!!!
+
+## Programming Materials id=programming
+
+!!!
+Link to our C++ content as well as the basic online c++ training and explain that there are many more
+
+http://www.cplusplus.com/doc/tutorial/
+https://en.cppreference.com/
 !!!
 
 ## Helpful Software id=helpful-software

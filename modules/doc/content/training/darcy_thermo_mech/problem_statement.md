@@ -1,13 +1,13 @@
 # Problem Statement
 
-Consider a system containing two pressure vessels at differing temperatures. The vessels are connected via a pipe that contains a filter consisting of close-packed steel spheres as shown in [problem-schematic]. Predict the velocity and temperature of the fluid inside the filter. The pipe is 0.304-m in length and 0.0514-m in diameter. The fluid inside the system is liquid water.
+Consider a system containing two pressure vessels at differing temperatures as in the experiments presented by [!cite](pamuk2012friction). The vessels are connected via a pipe that contains a filter consisting of close-packed steel spheres as shown in [problem-schematic]. Predict the velocity and temperature of the fluid inside the filter. The pipe is 0.304 m in length and 0.0514 m in diameter. The fluid inside the system is liquid water.
 
 !media problem_schematic.png
        style=width:80%;margin-left:auto;margin-right:auto;
        id=problem-schematic
-       caption=Schematic of the pressure vessel system used for demonstrations throughout the tutorial. (Pamuk and Ozdemir, [*"Friction factor, permeability, and inertial coefficient of oscillating flow through porous media of packed balls"*](https://www.sciencedirect.com/science/article/pii/S0894177711002640), Experimental Thermal and Fluid Science, v. 38, pp. 134-139, 2012.)
+       caption=Schematic of the pressure vessel system used for demonstrations throughout the tutorial [!cite](pamuk2012friction).
 
-Note that, for this tutorial, the outlined portion of the pipe of length $L$, shown in [problem-schematic], is of particular interest. This region shall serve as the problem domain, $\Omega$.
+For this tutorial, the outlined portion of the pipe of length $L$, shown in [problem-schematic], is of particular interest. This region shall serve as the problem domain, $\Omega$.
 
 ## Governing Equations
 
@@ -52,8 +52,6 @@ then it follows that the two unknowns, $p$ and $T$, must satisfy the following s
 \newline \, \newline
 C \left(\dfrac{\partial T}{\partial t} + \epsilon \bar{u} \cdot \nabla T \right) - \nabla \cdot k \nabla T = 0
 
-<!--the `\newline \, \newline` creates some white space between the individual equations in the system.-->
-
 The system's overall heat capacity, density, and thermal conductivity are weighted by the contributions of the individual materials and each depend on the porosity of the packed steel sphere medium. These three relationships are defined by the following:
 
 !equation id=heat-cap
@@ -71,7 +69,8 @@ Here, $c_{p}$ denotes specific heat and the subscripts, $f$ and $s$ refer to the
 
 The material properties of the fluid, $f$, and the solid, $s$, are given in [mats].
 
-<!-- The properties listed here are somewhat inconsistent with what we input in the code. First off, this is not a comprehensive list of all the mat props we'll see in the tutorial. And second, some of these properties depend on the temperature, for which we make different assumptions about its value at different steps in the tutorial. I'll need to update this table once I am clear about what our assumptions are... -->
+<!-- The properties listed here are somewhat inconsistent with what we input in the code. First off, this is not a comprehensive list of all the mat props we'll see in the tutorial. And second, some of these properties depend on the temperature, for which we make different assumptions about its value at different steps in the tutorial. I'll need to update this table once I am clear about what our assumptions are...
+-->
 
 !table id=mats caption=Material property values.
 | Property | Value | Units |
@@ -86,4 +85,11 @@ The material properties of the fluid, $f$, and the solid, $s$, are given in [mat
 
 !!!
 Yeah, we really need a forward and backward button here to proceed through the workshop...
+
+This code below sort of works, if you want to make a new MooseDocs feature a new command could be
+added to the navigation extension.
+
+!navigation backward=darcy_thermo_mech/index.md forward=darcy_thermo_mech/step01_moose_object.md
 !!!
+
+[Introduction](darcy_thermo_mech/index.md) [Step 1](darcy_thermo_mech/step01_diffusion.md) [!icon!keyboard_arrow_right]
