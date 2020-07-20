@@ -320,7 +320,16 @@ InputParameters::isParamValid(const std::string & name) const
   else if (have_parameter<ExecFlagEnum>(name))
     return get<ExecFlagEnum>(name).isValid();
   else
+  {
+    if (name == "x")
+    {
+      std::cout << "In isParamValid():\n";
+      print_trace();
+      std::cout << "\n\n";
+    }
+
     return _params.count(name) > 0 && _params.at(name)._valid;
+  }
 }
 
 bool
@@ -348,6 +357,83 @@ bool
 InputParameters::isPrivate(const std::string & name) const
 {
   return _params.count(name) > 0 && _params.at(name)._is_private;
+}
+
+void
+InputParameters::makeParamsDependent(const std::string & space_delim_names)
+{
+  // std::string parampath = blockFullpath() != "" ? blockFullpath() : input_names;
+  // std::ostringstream oss;
+  // // Required parameters
+  // for (const auto & it : *this)
+  // {
+  //   std::cout << "\nOn name: " << it.first << " isParamValid() = " << isParamValid(it.first) << "\n";
+  //
+  //   if (!isParamValid(it.first) && isParamRequired(it.first))
+  //   {
+  //     oss << blockLocation() << ": missing required parameter '" << parampath + "/" + it.first
+  //         << "'\n";
+  //     oss << "\tDoc String: \"" + getDocString(it.first) + "\"" << std::endl;
+  //   }
+  // }
+  //
+  // return;
+
+
+  std::vector<std::string> names, dependencies;
+  MooseUtils::tokenize(space_delim_names, names, 1, " \t\n\v\f\r");
+  for (const auto & name : names)
+  {
+    dependencies = names;
+    auto vec_iter = std::find(dependencies.begin(), dependencies.end(), name);
+    dependencies.erase(vec_iter);
+    auto map_iter = _params.find(name);
+    if (map_iter != _params.end()) // error is handled by checkParams method
+    {
+      map_iter->second._dependents = dependencies;
+    }
+  }
+
+  for (const auto & name : names)
+    dependencies = _params.at(name)._dependents;
+    for (unsigned int i = 0; i < dependencies.size(); ++i)
+      std::cout << dependencies[i] << "\n";
+
+
+    // auto map_iter = _params.find(name);
+    // for (auto it = names.begin(); it != names.at(map_iter); ++it)
+    //   dependencies.append(it.first);
+
+    //std::cout << "Name: " << name << ", map_iter: " << _params.at(name) << "\n\n";
+
+    //dependencies = names.erase(i);
+
+    // bool isValid = false; // _params.count(names[i]) > 0 && _params.at(names[i])._valid;
+    // std::cout << "\nOn name " << i << " out of " << names.size() << ": " << names[i] <<
+    //              " | isParamValid() = " << isValid << "\n";
+
+    // if ()
+    //
+    // if (isParamValid(names[i]))
+    // {
+    //   valid.append(names[i]);
+    //   valid.append(", ");
+    // }
+    // else
+    // {
+    //   invalid.append(names[i]);
+    //   invalid.append(", ");
+    // }
+  //}
+
+  // std::cout << "VALID: " << valid << ", INVALID: " << invalid << "\n";
+
+  // if (!valid.empty() && !invalid.empty())
+  //   mooseError("Since the parameters ",
+  //              valid,
+  //              "were provided, the parameters, ",
+  //              invalid,
+  //              "must also be.");
 }
 
 void

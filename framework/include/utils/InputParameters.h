@@ -455,6 +455,12 @@ public:
    */
   bool isPrivate(const std::string & name) const;
 
+//***********************************************************************************************//
+
+  void makeParamsDependent(const std::string & input_names);
+
+//***********************************************************************************************//
+
   /**
    * Declare the given parameters as controllable
    */
@@ -860,6 +866,9 @@ private:
     std::pair<std::string, std::string> _autobuild_vecs;
     /// True for parameters that are required (i.e. will cause an abort if not supplied)
     bool _required = false;
+
+    std::vector<std::string> _dependents;
+
     /**
      * Whether the parameter is either explicitly set or provided a default value when added
      * Note: We do not store MooseEnum names in valid params, instead we ask MooseEnums whether
