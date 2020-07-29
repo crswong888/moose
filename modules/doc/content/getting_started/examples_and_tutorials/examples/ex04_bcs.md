@@ -6,7 +6,7 @@ in [Example 3](examples/ex03_coupling.md). In this example, we extend MOOSE's bu
 Neumann boundary condition objects by allowing them to be coupled to independent variables in your
 equation system.  We also provide an example of using MOOSE's built-in periodic boundary
 conditions. For more detailed information about boundary conditions in MOOSE, see the
-[BCs System Documentation](syntax/BCs/index.md) 
+[BCs System Documentation](syntax/BCs/index.md)
 
 ## Coupled Dirichlet
 
@@ -90,3 +90,6 @@ Here are some results using periodic BCs from running `periodic_bc.i` and `trape
 - [examples/ex04_bcs/periodic_bc.i]
 - [examples/ex04_bcs/trapezoid.i]
 
+!content pagination use_title=True
+                    previous=examples/ex03_coupling.md
+                    next=examples/ex05_amr.md
