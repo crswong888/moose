@@ -8,3 +8,12 @@
 [submodule "petsc"]
     path = petsc
     url = https://gitlab.com/petsc/petsc.git
+[submodule "babbler/step01_moose_app"]
+	path = tutorials/tutorial01_app_development/step01_moose_app
+	url = ../../idaholab/babbler
+[submodule "babbler/step02_input_file"]
+	path = tutorials/tutorial01_app_development/step02_input_file
+	url = ../../idaholab/babbler
+[submodule "babbler/step05_kernel_object"]
+	path = tutorials/tutorial01_app_development/step05_kernel_object
+	url = ../../idaholab/babbler
