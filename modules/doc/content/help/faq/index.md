@@ -62,6 +62,9 @@ The above creates a new Conda environment: 'custom-petsc', installs the needed M
 !alert note title=We just built libMesh
 If following 'How do I build and use my own PETSc', know that during this step we also built libMesh. Making it unnecessary to also perform 'How do I build and use my own libMesh'. Performing both would negate the PETSc build step.
 
+## Where is the Stiffness Matrix?
+
+- Please see our discussion on "[What is the Finite Element Method?](what_is_fem.md)"
 
 [libMesh]: http://libmesh.github.io/
 
