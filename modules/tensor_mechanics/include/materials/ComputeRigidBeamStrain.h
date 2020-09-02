@@ -22,6 +22,9 @@ protected:
   /// Computes the displacement and rotation strain increments
   void computeQpStrain();
 
+  /// Computes the stiffness matrices
+  void computeStiffnessMatrix();
+
   /// Number of coupled displacement variables
   const unsigned int _ndisp;
 
@@ -47,6 +50,12 @@ protected:
   /// Initial length of the beam
   MaterialProperty<Real> & _original_length;
 
+  ///
+  ColumnMajorMatrix _constraint;
+
+  /// Rotational transformation from global coordinate system to initial beam local configuration
+  RankTwoTensor _original_local_config;
+
   /// Rotational transformation from global coordinate system to beam local configuration at time t
   MaterialProperty<RankTwoTensor> & _total_rotation;
 
@@ -66,10 +75,10 @@ protected:
   RealVectorValue _avg_rot_local_t;
 
   /// Mechanical displacement strain increment (after removal of eigenstrains) integrated over the cross-section.
-  MaterialProperty<RealVectorValue> & _mech_disp_strain_increment;
+  MaterialProperty<RealVectorValue> & _disp_strain_increment;
 
   /// Mechanical rotation strain increment (after removal of eigenstrains) integrated over the cross-section
-  MaterialProperty<RealVectorValue> & _mech_rot_strain_increment;
+  MaterialProperty<RealVectorValue> & _rot_strain_increment;
 
   /// Stiffness matrix between displacement DOFs of same node or across nodes
   MaterialProperty<RankTwoTensor> & _K11;
