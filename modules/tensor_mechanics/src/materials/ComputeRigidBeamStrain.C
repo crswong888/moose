@@ -78,6 +78,16 @@ ComputeRigidBeamStrain::initQpStatefulProperties()
   // only perform them for the first point and then copy their reults to all other points.
   if (_qp == 0)
   {
+    // Set the beam eleastic properties as the penalty coefficient
+    _material_stiffness[0](0) = _penalty;
+    _material_stiffness[0](2) = _penalty;
+    _material_stiffness[0](1) = _penalty;
+
+    // material_flexure relates the rotational strains to moments
+    _material_flexure[0](0) = _penalty;
+    _material_flexure[0](1) = _penalty;
+    _material_flexure[0](2) = _penalty;
+
     // calculate original length of beam element - "master" = node_ptr(0) and "slave" = node_ptr(1)
     //
     //devel Note: I'm not sure I really understand the purpose of only computing the number of beam
@@ -99,20 +109,6 @@ ComputeRigidBeamStrain::initQpStatefulProperties()
     {
       std::cout << "_dxyz(" << i << ") = " << _dxyz(i) << "\n";
     }
-
-    // compute a 6x6 multi-freedom constraint matrix that forces all components of strain to
-    // approach zero.
-    //
-    //devel Note: this might not work for incremental strain, we might have to do this in
-    // computeProperties() and use the updated coordinates from each time step
-    _constraint(6, 6);
-
-    for (unsigned int i = 0; i < 3; ++i) //devel
-      for (unsigned int j = 0; j < 3; ++j)
-      {
-        std::cout << "_constraint(" << i << ", " << j << ") = "
-                  << _constraint(i, j) << "\n";
-      }
 
     // compute initial orientation of the beam for calculating initial rotation matrix
     //
@@ -166,14 +162,14 @@ ComputeRigidBeamStrain::initQpStatefulProperties()
   {
     _original_length[_qp] = _original_length[0];
     _total_rotation[_qp] = _total_rotation[0];
+    _material_stiffness[_qp] = _material_stiffness[0];
+    _material_flexure[_qp] = _material_flexure[0];
   }
 }
 
 void
 ComputeRigidBeamStrain::computeProperties()
 {
-  std::cout << "\n** computeProperties() **\n"; //devel
-
   // Fetch the solution for the two end nodes at time t
   const NumericVector<Number> & sol = *_nl_sys.currentSolution();
   const NumericVector<Number> & sol_old = _nl_sys.solutionOld();
@@ -197,11 +193,8 @@ ComputeRigidBeamStrain::computeProperties()
   for (_qp = 0; _qp < _qrule->n_points(); ++_qp)
     computeQpStrain();
 
-  static int count = 0; //devel
-  count++; //devel
-
-  if (count == 2) //devel
-    mooseError("Exiting to process results."); //devel
+  if (_fe_problem.currentlyComputingJacobian())
+    computeStiffnessMatrix();
 }
 
 void
@@ -218,16 +211,53 @@ ComputeRigidBeamStrain::computeQpStrain()
   _grad_rot_0_local_t = _total_rotation[0] * grad_rot_0;
   _avg_rot_local_t = _total_rotation[0] * avg_rot;
 
+  // axial and shearing strains at each qp along the length of the beam
+  _disp_strain_increment[_qp](0) = _grad_disp_0_local_t(0);
+  _disp_strain_increment[_qp](1) = -_avg_rot_local_t(2) + _grad_disp_0_local_t(1);
+  _disp_strain_increment[_qp](2) = _avg_rot_local_t(1) + _grad_disp_0_local_t(2);
 
-  // principal strains
-  //_disp_strain_increment[_qp](0) = _disp0()
-
+  // rotational strains (curvature) at each qp along the length of the beam
+  _rot_strain_increment[_qp](0) = _grad_rot_0_local_t(0);
+  _rot_strain_increment[_qp](1) = _grad_rot_0_local_t(1);
+  _rot_strain_increment[_qp](2) = _grad_rot_0_local_t(2);
 
 }
 
 void
 ComputeRigidBeamStrain::computeStiffnessMatrix()
 {
-  //devel Note: carefule when computing _k11 - it looks like they do some sign convention stuff
+  //devel Note: careful when computing _k11 - it looks like they do some sign convention stuff
   // in StressDivergenceBeam, as opposed to right in here.
+
+  // relation between translational displacements at node 0 and translational forces at node 0
+  RankTwoTensor K11_local;
+  K11_local.zero();
+  K11_local(0, 0) = _material_stiffness[0](0);
+  K11_local(1, 1) = _material_stiffness[0](1);
+  K11_local(2, 2) = _material_stiffness[0](1);
+  _K11[0] = _total_rotation[0].transpose() * K11_local * _total_rotation[0];
+
+  // relation between displacements at node 0 and rotational moments at node 0
+  RankTwoTensor K21_local;
+  K21_local.zero();
+  K21_local(2, 1) = _material_stiffness[0](1) * 0.5;
+  K21_local(1, 2) = -_material_stiffness[0](1) * 0.5;
+  _K21[0] = _total_rotation[0].transpose() * K21_local * _total_rotation[0];
+
+  // relation between rotations at node 0 and rotational moments at node 0
+  RankTwoTensor K22_local;
+  K22_local.zero();
+  K22_local(0, 0) = _material_stiffness[0](1);
+  K22_local(1, 1) = _material_stiffness[0](0) + _material_stiffness[0](1) / 4.0;
+  K22_local(2, 2) = _material_stiffness[0](0) + _material_stiffness[0](1) / 4.0;
+  _K22[0] = _total_rotation[0].transpose() * K22_local * _total_rotation[0];
+
+  // relation between rotations at node 0 and rotational moments at node 1
+  RankTwoTensor K22_local_cross = -K22_local;
+  K22_local_cross(1, 1) += 2.0 * _material_stiffness[0](1) / 4.0;
+  K22_local_cross(2, 2) += 2.0 * _material_stiffness[0](1) / 4.0;
+  _K22_cross[0] = _total_rotation[0].transpose() * K22_local_cross * _total_rotation[0];
+
+  // relation between displacements at node 0 and rotational moments at node 1
+  _K21_cross[0] = -_K21[0];
 }

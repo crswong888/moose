@@ -50,9 +50,6 @@ protected:
   /// Initial length of the beam
   MaterialProperty<Real> & _original_length;
 
-  ///
-  ColumnMajorMatrix _constraint;
-
   /// Rotational transformation from global coordinate system to initial beam local configuration
   RankTwoTensor _original_local_config;
 

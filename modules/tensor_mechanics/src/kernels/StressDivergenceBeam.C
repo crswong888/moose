@@ -136,16 +136,12 @@ StressDivergenceBeam::computeResidual()
 void
 StressDivergenceBeam::computeJacobian()
 {
-  std::cout << "\n** computeJacobian() **\n"; //devel 
-
   prepareMatrixTag(_assembly, _var.number(), _var.number());
 
   for (unsigned int i = 0; i < _test.size(); ++i)
   {
     for (unsigned int j = 0; j < _phi.size(); ++j)
     {
-      std::cout << i << ", " << j << "\n"; //devel
-
       if (_component < 3)
         _local_ke(i, j) = (i == j ? 1 : -1) * _K11[0](_component, _component);
       else
