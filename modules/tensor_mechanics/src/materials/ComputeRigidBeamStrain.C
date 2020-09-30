@@ -11,18 +11,13 @@ InputParameters
 ComputeRigidBeamStrain::validParams()
 {
   InputParameters params = Material::validParams();
-
   params.addClassDescription("");
-
   params.addRequiredCoupledVar(
       "displacements",
       "The displacements appropriate for the simulation geometry and coordinate system");
   params.addRequiredCoupledVar(
-    "rotations", "The rotations appropriate for the simulation geometry and coordinate system");
-
-  params.addParam<Real>(
-      "penalty", 1.0e+08, "The penalty stiffness coefficient.");
-
+      "rotations", "The rotations appropriate for the simulation geometry and coordinate system");
+  params.addParam<Real>("penalty", 1.0e+16, "The penalty stiffness coefficient.");
   return params;
 }
 
@@ -88,40 +83,12 @@ ComputeRigidBeamStrain::initQpStatefulProperties()
     _material_flexure[0](1) = _penalty;
     _material_flexure[0](2) = _penalty;
 
-    // calculate original length of beam element - "master" = node_ptr(0) and "slave" = node_ptr(1)
-    //
-    //devel Note: I'm not sure I really understand the purpose of only computing the number of beam
-    // length components equal to the number of displacements as in computeIncrementalBeamStrain ...
-    // A user shouldn't have a beam run into a dimension where there not interested in displacement in
-    // the first place. If we really want to enforce this, then we should provide some warning in the
-    // constructor about the num of disp not being equal to the problem dimensions. Also, computing
-    // the length over the (unsigned int i = 0; i < _ndisp; ++i) loop does not gaurantee that the
-    // length is computer along the respective axes, for example, what if a user only specified
-    // displacements = 'disp_y disp_z', this loop is going to account for the x and y components of
-    // length... (assuming the user doesn't consider the disp_y and disp_z the 0 and 1 components).
-    // ALSO! If we're going to compute the beam length like this, then we should also compute
-    // the _total_rotation vector in this way (I think... this might not apply in the same way.)
-    // If we ARE gonna do this loop, we should somehow appropriately link it to _disp_num not _ndisp
-    _dxyz = (*_current_elem->node_ptr(1)) - (*_current_elem->node_ptr(0));
-    _original_length[0] = _dxyz.norm();
+    // set original length to unity so that it is anamolously cancelled from all equations
+    _original_length[0] = 1.0;
 
-    for (unsigned int i = 0; i < 3; ++i) //devel
-    {
-      std::cout << "_dxyz(" << i << ") = " << _dxyz(i) << "\n";
-    }
-
-    // compute initial orientation of the beam for calculating initial rotation matrix
-    //
-    //devel Note: not sure how this is going to effect my formulation, cuz the orientation is implicit
-    // in the formulation.
-    //
-    //devel Note: Perhaps there is some way I can derive the multi-freedom constriaint equations in
-    // terms of the rotation matrix. In the local configuration - all that matters is that the 2 nodes
-    // don't move along the beam axis relative to one another, so I suspect that this is the case.
-    //
-    //devel Note: get_dxyzdxi seems to return the QP Jacobian map (dNdxi * nodal global coordinates)
-    // which seems to basically be the absolute location of the QP relative to an end-node in global
-    RealVectorValue x_orientation = _dxyz / _dxyz.norm();
+    // compute initial orientation of the beam longitudinal axis
+    RealVectorValue dxyz = (*_current_elem->node_ptr(1)) - (*_current_elem->node_ptr(0));
+    RealVectorValue x_orientation = dxyz / dxyz.norm();
 
     // There exists an infinite number of vectors which are perpindicular to x_orientation. For a
     // rigid beam, the cross-sectional axes are trivial - so simply rotate the y-axis about the
@@ -146,17 +113,7 @@ ComputeRigidBeamStrain::initQpStatefulProperties()
     _original_local_config(2, 0) = z_orientation(0);
     _original_local_config(2, 1) = z_orientation(1);
     _original_local_config(2, 2) = z_orientation(2);
-
     _total_rotation[0] = _original_local_config;
-
-
-    for (unsigned int i = 0; i < 3; ++i) //devel
-      for (unsigned int j = 0; j < 3; ++j)
-      {
-        std::cout << "_original_local_config(" << i << ", " << j << ") = "
-                  << _original_local_config(i, j) << "\n";
-      }
-
   }
   else
   {
@@ -200,10 +157,10 @@ ComputeRigidBeamStrain::computeProperties()
 void
 ComputeRigidBeamStrain::computeQpStrain()
 {
-  // Rotate the gradient of displacements and rotations at t+delta t from global coordinate frame
-  // to beam local coordinate frame
-  const RealVectorValue grad_disp_0(1.0 / _original_length[0] * (_disp1 - _disp0));
-  const RealVectorValue grad_rot_0(1.0 / _original_length[0] * (_rot1 - _rot0));
+  // Rotate the gradient of displacements and rotations at t+delta t from global coordinate
+  // frame to beam local coordinate frame (assuming a unit original length)
+  const RealVectorValue grad_disp_0(_disp1 - _disp0);
+  const RealVectorValue grad_rot_0(_rot1 - _rot0);
   const RealVectorValue avg_rot(
       0.5 * (_rot0(0) + _rot1(0)), 0.5 * (_rot0(1) + _rot1(1)), 0.5 * (_rot0(2) + _rot1(2)));
 
@@ -220,42 +177,46 @@ ComputeRigidBeamStrain::computeQpStrain()
   _rot_strain_increment[_qp](0) = _grad_rot_0_local_t(0);
   _rot_strain_increment[_qp](1) = _grad_rot_0_local_t(1);
   _rot_strain_increment[_qp](2) = _grad_rot_0_local_t(2);
-
 }
 
 void
 ComputeRigidBeamStrain::computeStiffnessMatrix()
 {
-  //devel Note: careful when computing _k11 - it looks like they do some sign convention stuff
-  // in StressDivergenceBeam, as opposed to right in here.
+  const Real youngs_modulus = _material_stiffness[0](0);
+  const Real shear_modulus = _material_stiffness[0](1);
+
+  // K = |K11 K12|
+  //     |K21 K22|
 
   // relation between translational displacements at node 0 and translational forces at node 0
   RankTwoTensor K11_local;
   K11_local.zero();
-  K11_local(0, 0) = _material_stiffness[0](0);
-  K11_local(1, 1) = _material_stiffness[0](1);
-  K11_local(2, 2) = _material_stiffness[0](1);
+  K11_local(0, 0) = youngs_modulus;
+  K11_local(1, 1) = shear_modulus;
+  K11_local(2, 2) = shear_modulus;
   _K11[0] = _total_rotation[0].transpose() * K11_local * _total_rotation[0];
 
   // relation between displacements at node 0 and rotational moments at node 0
   RankTwoTensor K21_local;
   K21_local.zero();
-  K21_local(2, 1) = _material_stiffness[0](1) * 0.5;
-  K21_local(1, 2) = -_material_stiffness[0](1) * 0.5;
+  K21_local(2, 1) = shear_modulus * 0.5;
+  K21_local(1, 2) = -shear_modulus * 0.5;
   _K21[0] = _total_rotation[0].transpose() * K21_local * _total_rotation[0];
 
   // relation between rotations at node 0 and rotational moments at node 0
   RankTwoTensor K22_local;
   K22_local.zero();
-  K22_local(0, 0) = _material_stiffness[0](1);
-  K22_local(1, 1) = _material_stiffness[0](0) + _material_stiffness[0](1) / 4.0;
-  K22_local(2, 2) = _material_stiffness[0](0) + _material_stiffness[0](1) / 4.0;
+  K22_local(0, 0) = shear_modulus;
+  K22_local(1, 1) = youngs_modulus +
+                    shear_modulus / 4.0;
+  K22_local(2, 2) = youngs_modulus +
+                    shear_modulus / 4.0;
   _K22[0] = _total_rotation[0].transpose() * K22_local * _total_rotation[0];
 
   // relation between rotations at node 0 and rotational moments at node 1
   RankTwoTensor K22_local_cross = -K22_local;
-  K22_local_cross(1, 1) += 2.0 * _material_stiffness[0](1) / 4.0;
-  K22_local_cross(2, 2) += 2.0 * _material_stiffness[0](1) / 4.0;
+  K22_local_cross(1, 1) += 2.0 * shear_modulus / 4.0;
+  K22_local_cross(2, 2) += 2.0 * shear_modulus / 4.0;
   _K22_cross[0] = _total_rotation[0].transpose() * K22_local_cross * _total_rotation[0];
 
   // relation between displacements at node 0 and rotational moments at node 1

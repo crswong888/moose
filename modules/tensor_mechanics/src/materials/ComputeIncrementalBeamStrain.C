@@ -170,12 +170,6 @@ ComputeIncrementalBeamStrain::initQpStatefulProperties()
   _original_local_config(2, 0) = z_orientation(0);
   _original_local_config(2, 1) = z_orientation(1);
   _original_local_config(2, 2) = z_orientation(2);
-
-  for (unsigned int i = 0; i < 3; ++i)
-    for (unsigned int j = 0; j < 3; ++j)
-      std::cout << "_original_local_config(" << i << ", " << j << ") = "
-                << _original_local_config(i, j) << "\n";
-
   _total_rotation[_qp] = _original_local_config;
 
   RealVectorValue temp;
