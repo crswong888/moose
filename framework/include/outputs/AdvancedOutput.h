@@ -288,6 +288,13 @@ protected:
 
 private:
   /**
+   * Helper function for concatenating a set of names to represent the individual components of
+   * vector variables to the specified 'names_list' of an OutputDataWarehouse object. This is called
+   * by 'initAvailableLists()' and 'initShowHideLists()' when 'vname' is a vector.
+   */
+  void decomposeVectorNames(std::set<std::string> & names_list, const VariableName & vname);
+
+  /**
    * Initializes the available lists for each of the output types
    */
   void initAvailableLists();

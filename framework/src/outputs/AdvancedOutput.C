@@ -393,6 +393,29 @@ AdvancedOutput::hasOutput()
 }
 
 void
+AdvancedOutput::decomposeVectorNames(std::set<std::string> & names_list, const VariableName & vname)
+{
+  // Append to 'names_list' a set of names each suffixed with one of the cartesian components of the
+  // mesh space for a vector variable 'vname'.
+  switch (_es_ptr->get_mesh().spatial_dimension())
+  {
+    case 0:
+    case 1:
+      names_list.insert(vname);
+      break;
+    case 2:
+      names_list.insert(vname + "_x");
+      names_list.insert(vname + "_y");
+      break;
+    case 3:
+      names_list.insert(vname + "_x");
+      names_list.insert(vname + "_y");
+      names_list.insert(vname + "_z");
+      break;
+  }
+}
+
+void
 AdvancedOutput::initAvailableLists()
 {
   // Initialize Postprocessor list
@@ -423,27 +446,19 @@ AdvancedOutput::initAvailableLists()
         if (var.count() > 1)
           vname = SubProblem::arrayVariableComponent(var_name, i);
 
-        if (type.order == CONSTANT && type.family != MONOMIAL_VEC)
-          _execute_data["elemental"].available.insert(vname);
-        else if (type.family == NEDELEC_ONE || type.family == LAGRANGE_VEC ||
-                 type.family == MONOMIAL_VEC)
+        if (type.order == CONSTANT)
         {
-          switch (_es_ptr->get_mesh().spatial_dimension())
+          if (type.family == MONOMIAL_VEC)
           {
-            case 0:
-            case 1:
-              _execute_data["nodal"].available.insert(vname);
-              break;
-            case 2:
-              _execute_data["nodal"].available.insert(vname + "_x");
-              _execute_data["nodal"].available.insert(vname + "_y");
-              break;
-            case 3:
-              _execute_data["nodal"].available.insert(vname + "_x");
-              _execute_data["nodal"].available.insert(vname + "_y");
-              _execute_data["nodal"].available.insert(vname + "_z");
-              break;
+            decomposeVectorNames(_execute_data["elemental"].available, vname);
           }
+          else
+            _execute_data["elemental"].available.insert(vname);
+        }
+        else if (type.family == NEDELEC_ONE || type.family == LAGRANGE_VEC ||
+                 type.family == MONOMIAL_VEC) /*higher order MONOMIAL_VECs rendered at nodes*/
+        {
+          decomposeVectorNames(_execute_data["nodal"].available, vname);
         }
         else
           _execute_data["nodal"].available.insert(vname);
@@ -509,26 +524,18 @@ AdvancedOutput::initShowHideLists(const std::vector<VariableName> & show,
           vname = SubProblem::arrayVariableComponent(var_name, i);
 
         if (type.order == CONSTANT)
-          _execute_data["elemental"].show.insert(vname);
-        else if (type.family == NEDELEC_ONE || type.family == LAGRANGE_VEC ||
-                 type.family == MONOMIAL_VEC)
         {
-          switch (_es_ptr->get_mesh().spatial_dimension())
+          if (type.family == MONOMIAL_VEC)
           {
-            case 0:
-            case 1:
-              _execute_data["nodal"].show.insert(vname);
-              break;
-            case 2:
-              _execute_data["nodal"].show.insert(vname + "_x");
-              _execute_data["nodal"].show.insert(vname + "_y");
-              break;
-            case 3:
-              _execute_data["nodal"].show.insert(vname + "_x");
-              _execute_data["nodal"].show.insert(vname + "_y");
-              _execute_data["nodal"].show.insert(vname + "_z");
-              break;
+            decomposeVectorNames(_execute_data["elemental"].show, vname);
           }
+          else
+            _execute_data["elemental"].show.insert(vname);
+        }
+        else if (type.family == NEDELEC_ONE || type.family == LAGRANGE_VEC ||
+                 type.family == MONOMIAL_VEC) /*higher order MONOMIAL_VECs rendered at nodes*/
+        {
+          decomposeVectorNames(_execute_data["nodal"].show, vname);
         }
         else
           _execute_data["nodal"].show.insert(vname);
@@ -562,26 +569,18 @@ AdvancedOutput::initShowHideLists(const std::vector<VariableName> & show,
           vname = SubProblem::arrayVariableComponent(var_name, i);
 
         if (type.order == CONSTANT)
-          _execute_data["elemental"].hide.insert(vname);
-        else if (type.family == NEDELEC_ONE || type.family == LAGRANGE_VEC ||
-                 type.family == MONOMIAL_VEC)
         {
-          switch (_es_ptr->get_mesh().spatial_dimension())
+          if (type.family == MONOMIAL_VEC)
           {
-            case 0:
-            case 1:
-              _execute_data["nodal"].hide.insert(vname);
-              break;
-            case 2:
-              _execute_data["nodal"].hide.insert(vname + "_x");
-              _execute_data["nodal"].hide.insert(vname + "_y");
-              break;
-            case 3:
-              _execute_data["nodal"].hide.insert(vname + "_x");
-              _execute_data["nodal"].hide.insert(vname + "_y");
-              _execute_data["nodal"].hide.insert(vname + "_z");
-              break;
+            decomposeVectorNames(_execute_data["elemental"].hide, vname);
           }
+          else
+            _execute_data["elemental"].hide.insert(vname);
+        }
+        else if (type.family == NEDELEC_ONE || type.family == LAGRANGE_VEC ||
+                 type.family == MONOMIAL_VEC) /*higher order MONOMIAL_VECs rendered at nodes*/
+        {
+          decomposeVectorNames(_execute_data["nodal"].hide, vname);
         }
         else
           _execute_data["nodal"].hide.insert(vname);
