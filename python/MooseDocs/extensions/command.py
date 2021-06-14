@@ -15,13 +15,29 @@ from ..base import components, Reader, Extension
 from ..tree import tokens
 from . import core
 
+import traceback as tb
+
 def make_extension(**kwargs):
     """Create the CommandExtension object."""
     return CommandExtension(**kwargs)
+    # ext = CommandExtension(**kwargs)
+    #
+    # print()
+    # print("command.make_extension(", kwargs, ") =", CommandExtension(**kwargs))
+    # print(dir(ext), "\n")
+    #
+    # print(ext._TranslatorObject__translator)
+    # print(ext.EXTENSION_COMMANDS)
+    # print(ext.requires)
+    #
+    # return ext
 
 class CommandExtension(Extension):
     """Extension for creating tools necessary generic commands."""
     EXTENSION_COMMANDS = dict()
+
+    print("CommandExtension")
+    print(dir(Extension), "\n")
 
     def addCommand(self, reader, command):
 
@@ -41,16 +57,19 @@ class CommandExtension(Extension):
         else:
             subcommands = command.SUBCOMMAND
 
+        #
+        destination = self.translator['destination']
+        if destination not in CommandExtension.EXTENSION_COMMANDS:
+            CommandExtension.EXTENSION_COMMANDS[destination] = dict()
+
         # Add the command and error if it exists
         for cmd in commands:
             for sub in subcommands:
                 pair = (cmd, sub)
-                if pair in CommandExtension.EXTENSION_COMMANDS:
-                    msg = "A CommandComponent object exists with the command '{}' and " \
-                          "subcommand '{}'."
-                    raise common.exceptions.MooseDocsException(msg, pair[0], pair[1])
+                if pair in CommandExtension.EXTENSION_COMMANDS[destination]:
+                    raise common.exceptions.MooseDocsException(msg, pair[1], pair[2])
 
-                CommandExtension.EXTENSION_COMMANDS[pair] = command
+                CommandExtension.EXTENSION_COMMANDS[destination][pair] = command
 
     def extend(self, reader, renderer):
         self.requires(core)
@@ -82,6 +101,10 @@ class CommandBase(components.ReaderComponent):
 
     def createToken(self, parent, info, page):
 
+        # print(dir(self), "\n")
+        # print(dir(page), "\n")
+        # print(page.base, "\n")
+
         cmd = (info['command'], info['subcommand'])
         settings = info['settings']
 
@@ -100,10 +123,10 @@ class CommandBase(components.ReaderComponent):
 
         # Locate the command object to call
         try:
-            obj = CommandExtension.EXTENSION_COMMANDS[cmd]
+            obj = CommandExtension.EXTENSION_COMMANDS[page.base][cmd]
         except KeyError:
             try:
-                obj = CommandExtension.EXTENSION_COMMANDS[(cmd[0], '*')]
+                obj = CommandExtension.EXTENSION_COMMANDS[page.base][(cmd[0], '*')]
             except KeyError:
                 msg = "The following command combination is unknown: '{} {}'."
                 raise common.exceptions.MooseDocsException(msg.format(*cmd))
@@ -122,7 +145,7 @@ class CommandBase(components.ReaderComponent):
         return token
 
     def setTranslator(self, translator):
-        for comp in CommandExtension.EXTENSION_COMMANDS.values():
+        for comp in CommandExtension.EXTENSION_COMMANDS[translator.destination].values():
             comp.setTranslator(translator)
 
 class BlockInlineCommand(CommandBase):

@@ -60,6 +60,9 @@ class Translator(mixins.ConfigObject):
 
     def __init__(self, content, reader, renderer, extensions, executioner=None, **kwargs):
         mixins.ConfigObject.__init__(self, **kwargs)
+        print("TranslatorObject.__init__\n")
+        traceback.print_stack()
+        print()
 
         self.__initialized = False
         self.__extensions = extensions
@@ -73,8 +76,9 @@ class Translator(mixins.ConfigObject):
 
         # Populate the content list
         for p in content:
+            # print(p)
             self.addPage(p)
-
+        # print()
         # Caching for page searches (see findPages)
         self.__page_cache = dict()
 
@@ -132,6 +136,8 @@ class Translator(mixins.ConfigObject):
         if dest is not None:
             kwargs['destination'] = mooseutils.eval_path(dest)
         mixins.ConfigObject.update(self, **kwargs)
+
+        # if any other translator objects used the same destination, this would be a problem
 
     def findPages(self, arg, exact=False):
         """

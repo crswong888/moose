@@ -168,6 +168,40 @@ def main(options):
         translator.executioner.update(profile=True)
     translator.init()
 
+    print()
+    print(translator.extensions)
+
+####################################################################################################
+### MAYBE ALL OF THIS CAN BE MOVED TO LIKE A base.subsite KIND OF THING...
+###
+### Subsites definitely need to be in the config, so idk...
+
+    print()
+    print('*************************************************************************************\n')
+
+    rootdir = os.path.join(MooseDocs.MOOSE_DIR, 'tutorials/darcy_thermo_mech/doc')
+    subconfig = os.path.join(rootdir, 'config.yml')
+    print(subconfig, "\n")
+
+    # kwargs['Content']['']
+
+    trans, _ = common.load_config(subconfig, **kwargs)
+
+    # if options.destination:
+    #     des = mooseutils.eval_path(options.destination)
+    # else:
+    #     des = os.path.join(os.getenv('HOME'), '.local', 'share', 'moose', 'site')
+
+    # exts = [ext for ext in trans.extensions if ext not in translator.extensions]
+    # print(exts, "\n")
+
+    trans.update(destination=os.path.join(translator['destination'], 'workshop'))
+
+    trans.init()
+
+    print('*************************************************************************************\n')
+####################################################################################################
+
     # Replace "home" with local server
     home = options.home
     if options.serve:
@@ -207,6 +241,8 @@ def main(options):
         translator.execute(nodes, options.num_threads)
     else:
         translator.execute(None, options.num_threads)
+
+    trans.execute(None, options.num_threads)
 
     if options.serve:
         watcher = MooseDocsWatcher(translator, options)
