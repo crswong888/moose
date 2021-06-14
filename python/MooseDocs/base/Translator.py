@@ -60,9 +60,6 @@ class Translator(mixins.ConfigObject):
 
     def __init__(self, content, reader, renderer, extensions, executioner=None, **kwargs):
         mixins.ConfigObject.__init__(self, **kwargs)
-        print("TranslatorObject.__init__\n")
-        traceback.print_stack()
-        print()
 
         self.__initialized = False
         self.__extensions = extensions
@@ -76,9 +73,7 @@ class Translator(mixins.ConfigObject):
 
         # Populate the content list
         for p in content:
-            # print(p)
             self.addPage(p)
-        # print()
         # Caching for page searches (see findPages)
         self.__page_cache = dict()
 

@@ -15,29 +15,13 @@ from ..base import components, Reader, Extension
 from ..tree import tokens
 from . import core
 
-import traceback as tb
-
 def make_extension(**kwargs):
     """Create the CommandExtension object."""
     return CommandExtension(**kwargs)
-    # ext = CommandExtension(**kwargs)
-    #
-    # print()
-    # print("command.make_extension(", kwargs, ") =", CommandExtension(**kwargs))
-    # print(dir(ext), "\n")
-    #
-    # print(ext._TranslatorObject__translator)
-    # print(ext.EXTENSION_COMMANDS)
-    # print(ext.requires)
-    #
-    # return ext
 
 class CommandExtension(Extension):
     """Extension for creating tools necessary generic commands."""
     EXTENSION_COMMANDS = dict()
-
-    print("CommandExtension")
-    print(dir(Extension), "\n")
 
     def addCommand(self, reader, command):
 
@@ -57,7 +41,8 @@ class CommandExtension(Extension):
         else:
             subcommands = command.SUBCOMMAND
 
-        #
+        # Retrieve the 'destination' key from the translator to use as the dictionary key for the
+        # current pool of extension commands. If the key doesn't exist yet, then create it.
         destination = self.translator['destination']
         if destination not in CommandExtension.EXTENSION_COMMANDS:
             CommandExtension.EXTENSION_COMMANDS[destination] = dict()
@@ -67,6 +52,8 @@ class CommandExtension(Extension):
             for sub in subcommands:
                 pair = (cmd, sub)
                 if pair in CommandExtension.EXTENSION_COMMANDS[destination]:
+                    msg = "A CommandComponent object exists with the command '{}' and " \
+                          "subcommand '{}'."
                     raise common.exceptions.MooseDocsException(msg, pair[1], pair[2])
 
                 CommandExtension.EXTENSION_COMMANDS[destination][pair] = command
@@ -101,10 +88,6 @@ class CommandBase(components.ReaderComponent):
 
     def createToken(self, parent, info, page):
 
-        # print(dir(self), "\n")
-        # print(dir(page), "\n")
-        # print(page.base, "\n")
-
         cmd = (info['command'], info['subcommand'])
         settings = info['settings']
 
@@ -121,7 +104,7 @@ class CommandBase(components.ReaderComponent):
                 settings = info['subcommand'] + ' ' + settings
                 cmd = (info['command'], None)
 
-        # Locate the command object to call
+        # Locate the command object to call from pool built by current translator object
         try:
             obj = CommandExtension.EXTENSION_COMMANDS[page.base][cmd]
         except KeyError:
@@ -145,6 +128,7 @@ class CommandBase(components.ReaderComponent):
         return token
 
     def setTranslator(self, translator):
+        """Sets the translator object to use for extension components corresponding to commands."""
         for comp in CommandExtension.EXTENSION_COMMANDS[translator.destination].values():
             comp.setTranslator(translator)
 

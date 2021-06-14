@@ -168,38 +168,32 @@ def main(options):
         translator.executioner.update(profile=True)
     translator.init()
 
-    print()
-    print(translator.extensions)
-
 ####################################################################################################
 ### MAYBE ALL OF THIS CAN BE MOVED TO LIKE A base.subsite KIND OF THING...
 ###
-### Subsites definitely need to be in the config, so idk...
+### Subsites definitely need to be in the config, so idk... maybe it should just be a build arg
+###
+### All of this only works if the subsite doc directories are on the same ROOT_DIR
+###
+### If a subdocs content is already in the main config, error, warn, or just don't build subsite
 
-    print()
-    print('*************************************************************************************\n')
+    print("\n***LOADING SUBDOCS CONFIGURATIONS***\n")
+    subdocs = [os.path.join(MooseDocs.MOOSE_DIR, 'tutorials/darcy_thermo_mech/doc'),
+               os.path.join(MooseDocs.MOOSE_DIR, 'modules/tensor_mechanics/doc')]
+    subtrans = [common.load_config(os.path.join(doc, 'config.yml'), **kwargs)[0] for doc in subdocs]
 
-    rootdir = os.path.join(MooseDocs.MOOSE_DIR, 'tutorials/darcy_thermo_mech/doc')
-    subconfig = os.path.join(rootdir, 'config.yml')
-    print(subconfig, "\n")
+    subsites = ['workshop', 'tensor_mechanics']
+    for trans, site in zip(subtrans, subsites):
+        print('\n*********************************************************************************')
+        print('NOW INITIALIZING', site.upper(), '\n')
 
-    # kwargs['Content']['']
+        trans.update(destination=os.path.join(translator['destination'], site))
+        if options.profile:
+            trans.executioner.update(profile=True)
+        trans.init()
 
-    trans, _ = common.load_config(subconfig, **kwargs)
+    print('\n*********************************************************************************\n')
 
-    # if options.destination:
-    #     des = mooseutils.eval_path(options.destination)
-    # else:
-    #     des = os.path.join(os.getenv('HOME'), '.local', 'share', 'moose', 'site')
-
-    # exts = [ext for ext in trans.extensions if ext not in translator.extensions]
-    # print(exts, "\n")
-
-    trans.update(destination=os.path.join(translator['destination'], 'workshop'))
-
-    trans.init()
-
-    print('*************************************************************************************\n')
 ####################################################################################################
 
     # Replace "home" with local server
@@ -242,7 +236,19 @@ def main(options):
     else:
         translator.execute(None, options.num_threads)
 
-    trans.execute(None, options.num_threads)
+####################################################################################################
+### Need to not execute redundant content here, i.e., content already built by main translator
+
+    # for trans in subtrans:
+    for trans, site in zip(subtrans, subsites):
+        print('\n*********************************************************************************')
+        print('NOW BUILDING', site.upper(), '\n')
+
+        trans.execute(None, options.num_threads)
+
+    print('\n*********************************************************************************\n')
+
+####################################################################################################
 
     if options.serve:
         watcher = MooseDocsWatcher(translator, options)
