@@ -136,7 +136,7 @@ class MooseDocsWatcher(livereload.watcher.Watcher):
                 page.base = self._translator.get('destination')
                 if isinstance(page, pages.Source):
                     page.output_extension = self._translator.renderer.EXTENSION
-                self._translator.addContent(page)
+                self._translator.addContent(page) # shoudldn't this be addPage()???
                 return page
 
 def main(options):
@@ -158,15 +158,13 @@ def main(options):
     if options.stable:
         pass
     elif options.fast:
-        options.disable += ['MooseDocs.extensions.appsyntax', 'MooseDocs.extensions.navigation',
-                            'MooseDocs.extensions.sqa', 'MooseDocs.extensions.civet',
-                            'MooseDocs.extensions.gitutils']
+        options.disable += ['appsyntax', 'navigation', 'sqa', 'civet', 'gitutils']
     else:
-        options.disable += ['MooseDocs.extensions.sqa', 'MooseDocs.extensions.civet',
-                            'MooseDocs.extensions.gitutils']
-
+        options.disable += ['sqa', 'civet', 'gitutils']
+        
     for name in options.disable:
-        kwargs['Extensions'][name] = dict(active=False)
+        ext = '.'.join(['MooseDocs', 'extensions', name.lower()])
+        kwargs['Extensions'][ext] = dict(active=False)
 
     # Apply '--args' and override anything already set
     if options.args is not None:
@@ -178,7 +176,72 @@ def main(options):
         translator.update(destination=mooseutils.eval_path(options.destination))
     if options.profile:
         translator.executioner.update(profile=True)
+
+####################################################################################################
+### MAYBE ALL OF THIS CAN BE MOVED TO LIKE A base.subsite KIND OF THING...
+###
+### Subsites definitely need to be in the config, so idk... maybe it should just be a build arg...
+### or perhaps we can call yaml_load right from here and that's the only time subsites are parsed...
+###
+### I bet we can make load_config() accept a list of configs and return a list of translators, in
+### this way, we might be able to make 'subsites' a config key create a _yaml_load_subsites()
+### function. And perhaps subsubsites are ignored in this routine... or maybe even that could work
+###
+### All of this only works if the subsite doc directories are on the same ROOT_DIR
+###
+### If a subdocs content is already in the main config, error, warn, or just don't build subsite
+
+    print('\n*******************************************************************************')
+    print('INITIALIZING', translator['destination'], '\n')
     translator.init()
+
+    # subconfigs = [os.path.join(MooseDocs.MOOSE_DIR, 'tutorials/darcy_thermo_mech/doc/config.yml')]
+    # subconfigs = [os.path.join(MooseDocs.MOOSE_DIR, 'modules/tensor_mechanics/doc/config.yml')]
+    subconfigs = [os.path.join(MooseDocs.MOOSE_DIR, 'tutorials/darcy_thermo_mech/doc/config.yml'),
+                  os.path.join(MooseDocs.MOOSE_DIR, 'modules/tensor_mechanics/doc/config.yml')]
+    subtranslators = [common.load_config(conf, **kwargs)[0] for conf in subconfigs]
+
+    # subsites = ['workshop']
+    # subsites = ['tm_site']
+    subsites = ['workshop', 'tm_site']
+
+    content = [page for page in translator.getPages()]
+    sources = [page.source for page in content]
+
+    subcontent = dict()
+    for trans, site in zip(subtranslators, subsites):
+        trans.update(destination=translator['destination'])
+        if options.profile:
+            trans.executioner.update(profile=True)
+
+        #
+        for ext in trans.extensions:
+            if ext.name == 'navigation':
+                ext.update(**dict(num_bases=2))
+            elif ext.name == 'reveal':
+                ext.update(**dict(translate=[os.path.join(site, 'index.md')]))
+
+        print('\n*******************************************************************************')
+        print('INITIALIZING', os.path.join(translator['destination'], site), '\n')
+        trans.init()
+
+        #
+        subcontent[trans.uid] = list()
+        for page in [p for p in trans.getPages()]:
+            if page.source in sources:
+                trans.removePage(page)
+            else:
+                page._fullname = os.path.join(site, page.local)
+                subcontent[trans.uid].append(page)
+                translator.includePage(page)
+
+        #
+        for page in content:
+            trans.includePage(page)
+
+    print('\n*******************************************************************************\n')
+
+####################################################################################################
 
     # TODO: See `navigation.postExecute`
     #       The navigation "home" should be a markdown file, when all the apps update to this we
@@ -220,7 +283,18 @@ def main(options):
             nodes += translator.findPages(filename)
         translator.execute(nodes, options.num_threads)
     else:
-        translator.execute(None, options.num_threads)
+        translator.execute(content, options.num_threads)
+
+####################################################################################################
+### Do I need to implement the options.files for the subtranslatorss somehow here?
+
+    for trans in subtranslators:
+        print('\n*******************************************************************************\n')
+        trans.execute(subcontent[trans.uid], options.num_threads)
+
+    print('\n*******************************************************************************\n')
+
+####################################################################################################
 
     if options.serve:
         watcher = MooseDocsWatcher(translator, options)
