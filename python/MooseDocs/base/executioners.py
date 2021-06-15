@@ -123,10 +123,18 @@ class Executioner(mixins.ConfigObject, mixins.TranslatorObject):
 
         LOG.info('Executing extension initPage() methods complete [%s sec.]', time.time() - t)
 
-    def addPage(self, page):
+    def addPage(self, page, set_uid=True):
         """Add a Page object to be Translated."""
-        page._Page__unique_id = len(self._page_objects)
+        if set_uid:
+            page._Page__unique_id = len(self._page_objects)
         self._page_objects.append(page)
+
+    def removePage(self, page):
+        """Remove a Page object."""
+        for node in self._page_objects:
+            if node._Page__unique_id > page._Page__unique_id:
+                node._Page__unique_id -= 1
+        self._page_objects.remove(page)
 
     def getPages(self):
         """Return a list of Page objects."""

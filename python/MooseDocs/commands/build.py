@@ -131,7 +131,7 @@ class MooseDocsWatcher(livereload.watcher.Watcher):
                 page.base = self._translator.get('destination')
                 if isinstance(page, pages.Source):
                     page.output_extension = self._translator.renderer.EXTENSION
-                self._translator.addContent(page)
+                self._translator.addContent(page) # shoudldn't this be addPage()???
                 return page
 
 def main(options):
@@ -151,10 +151,10 @@ def main(options):
 
     # Disable extensions
     if options.fast:
-        options.disable += ['MooseDocs.extensions.appsyntax', 'MooseDocs.extensions.navigation',
-                            'MooseDocs.extensions.sqa', 'MooseDocs.extensions.civet']
+        options.disable += ['appsyntax', 'navigation', 'sqa', 'civet']
     for name in options.disable:
-        kwargs['Extensions'][name] = dict(active=False)
+        ext = '.'.join(['MooseDocs', 'extensions', name.lower()])
+        kwargs['Extensions'][ext] = dict(active=False)
 
     # Apply '--args' and override anything already set
     if options.args is not None:
@@ -166,31 +166,85 @@ def main(options):
         translator.update(destination=mooseutils.eval_path(options.destination))
     if options.profile:
         translator.executioner.update(profile=True)
-    translator.init()
 
 ####################################################################################################
 ### MAYBE ALL OF THIS CAN BE MOVED TO LIKE A base.subsite KIND OF THING...
 ###
-### Subsites definitely need to be in the config, so idk... maybe it should just be a build arg
+### Subsites definitely need to be in the config, so idk... maybe it should just be a build arg...
+### or perhaps we can call yaml_load right from here and that's the only time subsites are parsed...
+###
+### I bet we can make load_config() accept a list of configs and return a list of translators, in
+### this way, we might be able to make 'subsites' a config key create a _yaml_load_subsites()
+### function. And perhaps subsubsites are ignored in this routine... or maybe even that could work
 ###
 ### All of this only works if the subsite doc directories are on the same ROOT_DIR
 ###
 ### If a subdocs content is already in the main config, error, warn, or just don't build subsite
 
+    print('\n*********************************************************************************')
+    print('INITIALIZING', translator['destination'], '\n')
+
+    # oldkeys = [dir(page) for page in translator.getPages()]
+    translator.init()
+    # for p, page in enumerate(translator.getPages()):
+    #     print([key for key in dir(page) if key not in oldkeys[p]])
+
     print("\n***LOADING SUBDOCS CONFIGURATIONS***\n")
-    subdocs = [os.path.join(MooseDocs.MOOSE_DIR, 'tutorials/darcy_thermo_mech/doc'),
-               os.path.join(MooseDocs.MOOSE_DIR, 'modules/tensor_mechanics/doc')]
+    subdocs = [os.path.join(MooseDocs.MOOSE_DIR, 'tutorials/darcy_thermo_mech/doc')]
+    # subdocs = [os.path.join(MooseDocs.MOOSE_DIR, 'tutorials/darcy_thermo_mech/doc'),
+    #            os.path.join(MooseDocs.MOOSE_DIR, 'modules/tensor_mechanics/doc')]
     subtrans = [common.load_config(os.path.join(doc, 'config.yml'), **kwargs)[0] for doc in subdocs]
 
-    subsites = ['workshop', 'tensor_mechanics']
+
+
+    content = [page for page in translator.getPages()]
+    sources = [page.source for page in content]
+
+    subsites = ['workshop']
+    # subsites = ['workshop', 'tensor_mechanics']
+    subcontent = dict()
     for trans, site in zip(subtrans, subsites):
         print('\n*********************************************************************************')
-        print('NOW INITIALIZING', site.upper(), '\n')
+        print('INITIALIZING', trans['destination'], '\n')
 
-        trans.update(destination=os.path.join(translator['destination'], site))
+        #
+        trans.update(destination=os.path.join(translator['destination'], site.lower()))
         if options.profile:
             trans.executioner.update(profile=True)
+
+        # oldkeys = [dir(page) for page in trans.getPages()]
         trans.init()
+        # for p, page in enumerate(trans.getPages()):
+        #     print([key for key in dir(page) if key not in oldkeys[p]])
+
+        print("running removePage() on", site.upper(), ':', len(trans.getPages()), 'pages')
+
+        subcontent[site] = list()
+        for page in [page for page in trans.getPages()]:
+            if page.source in sources:
+                trans.removePage(page)
+            else:
+                # page.subsite = site
+                subcontent[site].append(page)
+
+                # oldkeys = [key for key in page.attributes.keys()]
+                translator.includePage(page, site)
+                # print([key for key in page.attributes.keys() if key not in oldkeys], "\n")
+
+        #
+        for page in content:
+            trans.includePage(page)
+
+    # print('\n*********************************************************************************')
+    # print('INITIALIZING', translator['destination'], '\n')
+    #
+    # #
+    # translator.init()
+    # for trans in subtrans:
+    #     print('\n*********************************************************************************')
+    #     print('INITIALIZING', trans['destination'], '\n')
+    #     trans.init()
+    # # translator.init()
 
     print('\n*********************************************************************************\n')
 
@@ -234,7 +288,7 @@ def main(options):
             nodes += translator.findPages(filename)
         translator.execute(nodes, options.num_threads)
     else:
-        translator.execute(None, options.num_threads)
+        translator.execute(content, options.num_threads)
 
 ####################################################################################################
 ### Need to not execute redundant content here, i.e., content already built by main translator
@@ -242,9 +296,13 @@ def main(options):
     # for trans in subtrans:
     for trans, site in zip(subtrans, subsites):
         print('\n*********************************************************************************')
-        print('NOW BUILDING', site.upper(), '\n')
+        print('BUILDING', site.upper(), '\n')
 
-        trans.execute(None, options.num_threads)
+        # clean up redundant subcontent
+        # append cleaned up subcontent to main translator
+        # execute subcontent on subtranslator
+
+        trans.execute(subcontent[site], options.num_threads)
 
     print('\n*********************************************************************************\n')
 

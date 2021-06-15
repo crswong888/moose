@@ -117,9 +117,23 @@ class Translator(mixins.ConfigObject):
             msg = "The {} object has already been initialized, the addPage method must be called " \
                   "prior to initialization. Extension objects can add pages within the init() " \
                   "method."
-            raise MooseDocs.common.exceptions.MooseDocsException(msg, type(self))
+            raise exceptions.MooseDocsException(msg, type(self))
 
         self.__executioner.addPage(page)
+
+    def removePage(self, page):
+        """
+        Remove a page from the current list of available pages.
+
+        Inputs:
+          page[pages.Page]: The object to remove from the list
+        """
+        # if self.__initialized:
+        #     msg = "The {} object has already been initialized, the removePage method must be " \
+        #           "called prior to initialization."
+        #     raise exceptions.MooseDocsException(msg, type(self))
+
+        self.__executioner.removePage(page)
 
     def getPages(self):
         """Return the Page objects"""
@@ -214,7 +228,7 @@ class Translator(mixins.ConfigObject):
         if self.__initialized:
             msg = "The {} object has already been initialized, this method should not " \
                   "be called twice."
-            raise MooseDocs.common.exceptions.MooseDocsException(msg, type(self))
+            raise exceptions.MooseDocsException(msg, type(self))
 
         # Attach translator to Executioner
         self.__executioner.setTranslator(self)
@@ -245,6 +259,23 @@ class Translator(mixins.ConfigObject):
         # Initialize the Page objects
         self.__executioner.init(self.get("destination"))
         self.__initialized = True
+
+    def includePage(self, page, dir=None):
+        """ """
+        self.__assertInitialize()
+        if page.source in [p.source for p in self.getPages()]:
+            print('ERROR')
+
+        if dir is not None:
+            page._fullname = os.path.join(dir, page.local)
+
+        for ext in self.extensions:
+            attr = '__{}__'.format(ext.name)
+            if attr not in page.attributes.keys():
+                page['__{}__'.format(ext.name)] = dict()
+        self.executePageMethod('initPage', page)
+
+        self.__executioner.addPage(page, set_uid=False)
 
     def execute(self, nodes=None, num_threads=1):
         """Perform build for all pages, see executioners."""
