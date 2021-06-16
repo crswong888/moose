@@ -10,10 +10,12 @@ import os
 import uuid
 import logging
 import mooseutils
+from ..base import Translator
 
 LOG = logging.getLogger(__name__)
 
-@mooseutils.addProperty('base', ptype=str)                  # set by Translator::init
+@mooseutils.addProperty('translator', ptype=Translator)     # set by translator.__init__()
+@mooseutils.addProperty('base', ptype=str)                  # set by Translator.init()
 @mooseutils.addProperty('source', ptype=str, required=True) # supplied source file/directory
 @mooseutils.addProperty('external', ptype=bool, default=False) # set by get_content.py used by appsyntax.py
 class Page(mooseutils.AutoPropertyMixin):
@@ -105,4 +107,5 @@ class Source(File):
     def destination(self):
         """The content destination (override)."""
         _, ext = os.path.splitext(self.source)
+        # print(super(Source, self).destination.replace(ext, self.output_extension))
         return super(Source, self).destination.replace(ext, self.output_extension)

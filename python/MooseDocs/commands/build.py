@@ -180,7 +180,6 @@ def main(options):
 ### All of this only works if the subsite doc directories are on the same ROOT_DIR
 ###
 ### If a subdocs content is already in the main config, error, warn, or just don't build subsite
-
     print('\n*********************************************************************************')
     print('INITIALIZING', translator['destination'], '\n')
 
@@ -189,10 +188,14 @@ def main(options):
     # for p, page in enumerate(translator.getPages()):
     #     print([key for key in dir(page) if key not in oldkeys[p]])
 
-    print("\n***LOADING SUBDOCS CONFIGURATIONS***\n")
+
+    print('\n*********************************************************************************')
+    print("LOADING SUBDOCS CONFIGURATIONS\n")
     subdocs = [os.path.join(MooseDocs.MOOSE_DIR, 'tutorials/darcy_thermo_mech/doc')]
     # subdocs = [os.path.join(MooseDocs.MOOSE_DIR, 'tutorials/darcy_thermo_mech/doc'),
     #            os.path.join(MooseDocs.MOOSE_DIR, 'modules/tensor_mechanics/doc')]
+
+    # kwargs['Extensions']['MooseDocs.extensions.reveal'] = dict(translate=['workshop/index.md'])
     subtrans = [common.load_config(os.path.join(doc, 'config.yml'), **kwargs)[0] for doc in subdocs]
 
 
@@ -204,13 +207,22 @@ def main(options):
     # subsites = ['workshop', 'tensor_mechanics']
     subcontent = dict()
     for trans, site in zip(subtrans, subsites):
-        print('\n*********************************************************************************')
-        print('INITIALIZING', trans['destination'], '\n')
+        print()
+        for e, ext in enumerate(trans.extensions):
+            if isinstance(ext, MooseDocs.extensions.reveal.RevealExtension):
+                print(dir(ext))
+                # ext(dict(translate=['workshop/index.md']))
+                ext.update(**dict(translate=['workshop/index.md']))
+                print(ext.get('translate'))
 
         #
-        trans.update(destination=os.path.join(translator['destination'], site.lower()))
+        trans.update(destination=translator['destination'])
+        # trans.update(destination=os.path.join(trans['destination'], site))
         if options.profile:
             trans.executioner.update(profile=True)
+
+        print('\n*********************************************************************************')
+        print('INITIALIZING', os.path.join(translator['destination'], site), '\n')
 
         # oldkeys = [dir(page) for page in trans.getPages()]
         trans.init()
@@ -225,26 +237,21 @@ def main(options):
                 trans.removePage(page)
             else:
                 # page.subsite = site
+                page._fullname = os.path.join(site, page.local)
                 subcontent[site].append(page)
 
                 # oldkeys = [key for key in page.attributes.keys()]
-                translator.includePage(page, site)
+                translator.includePage(page)
                 # print([key for key in page.attributes.keys() if key not in oldkeys], "\n")
 
         #
         for page in content:
             trans.includePage(page)
 
-    # print('\n*********************************************************************************')
-    # print('INITIALIZING', translator['destination'], '\n')
-    #
-    # #
-    # translator.init()
-    # for trans in subtrans:
-    #     print('\n*********************************************************************************')
-    #     print('INITIALIZING', trans['destination'], '\n')
-    #     trans.init()
-    # # translator.init()
+    print()
+    for page in subcontent['workshop']:
+        print(page.local, page.translator.uid)
+    print(len(subcontent['workshop']))
 
     print('\n*********************************************************************************\n')
 

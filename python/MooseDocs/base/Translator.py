@@ -13,6 +13,7 @@ Renderer objects. The Translator objects exist as a place to import extensions a
 between the reading and rendering content.
 """
 import os
+import uuid
 import logging
 import multiprocessing
 import types
@@ -65,6 +66,7 @@ class Translator(mixins.ConfigObject):
         self.__extensions = extensions
         self.__reader = reader
         self.__renderer = renderer
+        self.__unique_id = uuid.uuid4()
 
         # Define an Executioner if not provided
         self.__executioner = executioner
@@ -72,8 +74,11 @@ class Translator(mixins.ConfigObject):
             self.__executioner = ParallelBarrier()
 
         # Populate the content list
+        # print()
         for p in content:
             self.addPage(p)
+            p.translator = self
+            # print(p.local, p.translator.uid)
         # Caching for page searches (see findPages)
         self.__page_cache = dict()
 
@@ -100,6 +105,11 @@ class Translator(mixins.ConfigObject):
     def executioner(self):
         """Return the Executioner object."""
         return self.__executioner
+
+    @property
+    def uid(self):
+        """Return the unique ID for this translator object."""
+        return self.__unique_id
 
     @property
     def destination(self):
@@ -260,14 +270,11 @@ class Translator(mixins.ConfigObject):
         self.__executioner.init(self.get("destination"))
         self.__initialized = True
 
-    def includePage(self, page, dir=None):
+    def includePage(self, page):
         """ """
         self.__assertInitialize()
         if page.source in [p.source for p in self.getPages()]:
             print('ERROR')
-
-        if dir is not None:
-            page._fullname = os.path.join(dir, page.local)
 
         for ext in self.extensions:
             attr = '__{}__'.format(ext.name)
@@ -278,6 +285,9 @@ class Translator(mixins.ConfigObject):
         self.__executioner.addPage(page, set_uid=False)
 
     def execute(self, nodes=None, num_threads=1):
+        # for n in nodes:
+        #     print(n.get('active', True))
+        # print(len(nodes), "\n")
         """Perform build for all pages, see executioners."""
         self.__assertInitialize()
         self.__executioner(nodes, num_threads)
