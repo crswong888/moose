@@ -180,80 +180,57 @@ def main(options):
 ### All of this only works if the subsite doc directories are on the same ROOT_DIR
 ###
 ### If a subdocs content is already in the main config, error, warn, or just don't build subsite
-    print('\n*********************************************************************************')
+    print('\n*******************************************************************************')
     print('INITIALIZING', translator['destination'], '\n')
-
-    # oldkeys = [dir(page) for page in translator.getPages()]
     translator.init()
-    # for p, page in enumerate(translator.getPages()):
-    #     print([key for key in dir(page) if key not in oldkeys[p]])
 
-
-    print('\n*********************************************************************************')
+    print('\n*******************************************************************************')
     print("LOADING SUBDOCS CONFIGURATIONS\n")
-    subdocs = [os.path.join(MooseDocs.MOOSE_DIR, 'tutorials/darcy_thermo_mech/doc')]
-    # subdocs = [os.path.join(MooseDocs.MOOSE_DIR, 'tutorials/darcy_thermo_mech/doc'),
-    #            os.path.join(MooseDocs.MOOSE_DIR, 'modules/tensor_mechanics/doc')]
+    # subconfigs = [os.path.join(MooseDocs.MOOSE_DIR, 'tutorials/darcy_thermo_mech/doc/config.yml')]
+    # subconfigs = [os.path.join(MooseDocs.MOOSE_DIR, 'modules/tensor_mechanics/doc/config.yml')]
+    subconfigs = [os.path.join(MooseDocs.MOOSE_DIR, 'tutorials/darcy_thermo_mech/doc/config.yml'),
+                  os.path.join(MooseDocs.MOOSE_DIR, 'modules/tensor_mechanics/doc/config.yml')]
+    subtranslators = [common.load_config(conf, **kwargs)[0] for conf in subconfigs]
 
-    # kwargs['Extensions']['MooseDocs.extensions.reveal'] = dict(translate=['workshop/index.md'])
-    subtrans = [common.load_config(os.path.join(doc, 'config.yml'), **kwargs)[0] for doc in subdocs]
-
-
+    # subsites = ['workshop']
+    # subsites = ['tm_site']
+    subsites = ['workshop', 'tm_site']
 
     content = [page for page in translator.getPages()]
     sources = [page.source for page in content]
 
-    subsites = ['workshop']
-    # subsites = ['workshop', 'tensor_mechanics']
     subcontent = dict()
-    for trans, site in zip(subtrans, subsites):
-        print()
-        for e, ext in enumerate(trans.extensions):
-            if isinstance(ext, MooseDocs.extensions.reveal.RevealExtension):
-                print(dir(ext))
-                # ext(dict(translate=['workshop/index.md']))
-                ext.update(**dict(translate=['workshop/index.md']))
-                print(ext.get('translate'))
-
-        #
+    for trans, site in zip(subtranslators, subsites):
         trans.update(destination=translator['destination'])
-        # trans.update(destination=os.path.join(trans['destination'], site))
         if options.profile:
             trans.executioner.update(profile=True)
 
-        print('\n*********************************************************************************')
+        print('\n*******************************************************************************')
         print('INITIALIZING', os.path.join(translator['destination'], site), '\n')
-
-        # oldkeys = [dir(page) for page in trans.getPages()]
         trans.init()
-        # for p, page in enumerate(trans.getPages()):
-        #     print([key for key in dir(page) if key not in oldkeys[p]])
 
         print("running removePage() on", site.upper(), ':', len(trans.getPages()), 'pages')
-
-        subcontent[site] = list()
-        for page in [page for page in trans.getPages()]:
+        subcontent[trans.uid] = list()
+        for page in [p for p in trans.getPages()]:
             if page.source in sources:
                 trans.removePage(page)
             else:
-                # page.subsite = site
                 page._fullname = os.path.join(site, page.local)
-                subcontent[site].append(page)
-
-                # oldkeys = [key for key in page.attributes.keys()]
+                subcontent[trans.uid].append(page)
                 translator.includePage(page)
-                # print([key for key in page.attributes.keys() if key not in oldkeys], "\n")
 
         #
         for page in content:
             trans.includePage(page)
 
-    print()
-    for page in subcontent['workshop']:
-        print(page.local, page.translator.uid)
-    print(len(subcontent['workshop']))
+        #
+        for ext in trans.extensions:
+            if ext.name == 'navigation':
+                ext.update(**dict(num_bases=2))
+            elif ext.name == 'reveal':
+                ext.update(**dict(translate=[os.path.join(site, 'index.md')]))
 
-    print('\n*********************************************************************************\n')
+    print('\n*******************************************************************************\n')
 
 ####################################################################################################
 
@@ -298,20 +275,13 @@ def main(options):
         translator.execute(content, options.num_threads)
 
 ####################################################################################################
-### Need to not execute redundant content here, i.e., content already built by main translator
+### Do I need to implement the options.files for the subtranslatorss somehow here?
 
-    # for trans in subtrans:
-    for trans, site in zip(subtrans, subsites):
-        print('\n*********************************************************************************')
-        print('BUILDING', site.upper(), '\n')
+    for trans in subtranslators:
+        print('\n*******************************************************************************\n')
+        trans.execute(subcontent[trans.uid], options.num_threads)
 
-        # clean up redundant subcontent
-        # append cleaned up subcontent to main translator
-        # execute subcontent on subtranslator
-
-        trans.execute(subcontent[site], options.num_threads)
-
-    print('\n*********************************************************************************\n')
+    print('\n*******************************************************************************\n')
 
 ####################################################################################################
 

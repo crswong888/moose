@@ -44,17 +44,13 @@ class CommandExtension(Extension):
         # Retrieve the 'uid' key from the translator to use as the dictionary key for the current
         # pool of extension commands. If the key doesn't exist yet, then create it.
         uid = self.translator.uid
-        # print(CommandExtension.EXTENSION_COMMANDS.keys())
         if uid not in CommandExtension.EXTENSION_COMMANDS:
-            # print()
-            # print(uid)
             CommandExtension.EXTENSION_COMMANDS[uid] = dict()
 
         # Add the command and error if it exists
         for cmd in commands:
             for sub in subcommands:
                 pair = (cmd, sub)
-                print(pair, uid)
                 if pair in CommandExtension.EXTENSION_COMMANDS[uid]:
                     msg = "A CommandComponent object exists with the command '{}' and " \
                           "subcommand '{}'."
@@ -63,10 +59,6 @@ class CommandExtension(Extension):
                 CommandExtension.EXTENSION_COMMANDS[uid][pair] = command
 
     def extend(self, reader, renderer):
-        # print("extend():")
-        # print(self.translator.uid)
-        # print(self.EXTENSION_COMMANDS.keys(), "\n")
-
         self.requires(core)
         reader.addBlock(BlockBlockCommand(), location='_begin')
         reader.addBlock(BlockInlineCommand(), location='<BlockBlockCommand')
@@ -95,12 +87,9 @@ class CommandBase(components.ReaderComponent):
         components.ReaderComponent.__init__(self, *args, **kwargs)
 
     def createToken(self, parent, info, page):
-
         uid = page.translator.uid
         cmd = (info['command'], info['subcommand'])
         settings = info['settings']
-
-        # print(page.local, uid)
 
         # Handle filename and None subcommand
         if info['subcommand']:
@@ -139,10 +128,6 @@ class CommandBase(components.ReaderComponent):
         return token
 
     def setTranslator(self, translator):
-        # print("setTranslator():")
-        # print(translator.uid)
-        # print(CommandExtension.EXTENSION_COMMANDS.keys(), "\n")
-
         """Sets the translator object to use for extension components corresponding to commands."""
         for comp in CommandExtension.EXTENSION_COMMANDS[translator.uid].values():
             comp.setTranslator(translator)

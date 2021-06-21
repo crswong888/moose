@@ -180,8 +180,11 @@ class Translator(mixins.ConfigObject):
                 self.__page_cache[arg] = items
 
         else:
+            print()
+            print('arg =', arg)
             items = [page for page in self.__executioner.getPages() if arg(page)]
-
+            print(any([arg(page) for page in self.__executioner.getPages()]))
+            print('items =', items)
         return items
 
     def findPage(self, arg, throw_on_zero=True, exact=False, warn_on_zero=False):
@@ -279,15 +282,12 @@ class Translator(mixins.ConfigObject):
         for ext in self.extensions:
             attr = '__{}__'.format(ext.name)
             if attr not in page.attributes.keys():
-                page['__{}__'.format(ext.name)] = dict()
+                page[attr] = dict()
         self.executePageMethod('initPage', page)
 
         self.__executioner.addPage(page, set_uid=False)
 
     def execute(self, nodes=None, num_threads=1):
-        # for n in nodes:
-        #     print(n.get('active', True))
-        # print(len(nodes), "\n")
         """Perform build for all pages, see executioners."""
         self.__assertInitialize()
         self.__executioner(nodes, num_threads)
