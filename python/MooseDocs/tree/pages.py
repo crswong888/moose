@@ -107,5 +107,4 @@ class Source(File):
     def destination(self):
         """The content destination (override)."""
         _, ext = os.path.splitext(self.source)
-        # print(super(Source, self).destination.replace(ext, self.output_extension))
         return super(Source, self).destination.replace(ext, self.output_extension)

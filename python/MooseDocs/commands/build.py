@@ -180,12 +180,11 @@ def main(options):
 ### All of this only works if the subsite doc directories are on the same ROOT_DIR
 ###
 ### If a subdocs content is already in the main config, error, warn, or just don't build subsite
+
     print('\n*******************************************************************************')
     print('INITIALIZING', translator['destination'], '\n')
     translator.init()
 
-    print('\n*******************************************************************************')
-    print("LOADING SUBDOCS CONFIGURATIONS\n")
     # subconfigs = [os.path.join(MooseDocs.MOOSE_DIR, 'tutorials/darcy_thermo_mech/doc/config.yml')]
     # subconfigs = [os.path.join(MooseDocs.MOOSE_DIR, 'modules/tensor_mechanics/doc/config.yml')]
     subconfigs = [os.path.join(MooseDocs.MOOSE_DIR, 'tutorials/darcy_thermo_mech/doc/config.yml'),
@@ -205,11 +204,18 @@ def main(options):
         if options.profile:
             trans.executioner.update(profile=True)
 
+        #
+        for ext in trans.extensions:
+            if ext.name == 'navigation':
+                ext.update(**dict(num_bases=2))
+            elif ext.name == 'reveal':
+                ext.update(**dict(translate=[os.path.join(site, 'index.md')]))
+
         print('\n*******************************************************************************')
         print('INITIALIZING', os.path.join(translator['destination'], site), '\n')
         trans.init()
 
-        print("running removePage() on", site.upper(), ':', len(trans.getPages()), 'pages')
+        #
         subcontent[trans.uid] = list()
         for page in [p for p in trans.getPages()]:
             if page.source in sources:
@@ -222,13 +228,6 @@ def main(options):
         #
         for page in content:
             trans.includePage(page)
-
-        #
-        for ext in trans.extensions:
-            if ext.name == 'navigation':
-                ext.update(**dict(num_bases=2))
-            elif ext.name == 'reveal':
-                ext.update(**dict(translate=[os.path.join(site, 'index.md')]))
 
     print('\n*******************************************************************************\n')
 

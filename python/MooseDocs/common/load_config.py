@@ -95,8 +95,6 @@ def load_extensions(ext_list, ext_configs=None):
     if ext_configs is None:
         ext_configs = dict()
 
-    print("\nload_extensions():")
-
     extensions = []
     for ext in ext_list:
         name, mod = _get_module(ext)
@@ -107,9 +105,6 @@ def load_extensions(ext_list, ext_configs=None):
             obj = mod.make_extension(**ext_configs.get(name, dict()))
             # hack to allow build to disable via command line
             extensions.append(obj)
-
-        print(ext)
-    print()
 
     return extensions
 

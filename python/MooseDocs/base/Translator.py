@@ -73,12 +73,10 @@ class Translator(mixins.ConfigObject):
         if executioner is None:
             self.__executioner = ParallelBarrier()
 
-        # Populate the content list
-        # print()
+        # Populate the content list and set the translator key for the page objects
         for p in content:
             self.addPage(p)
             p.translator = self
-            # print(p.local, p.translator.uid)
         # Caching for page searches (see findPages)
         self.__page_cache = dict()
 
@@ -119,30 +117,20 @@ class Translator(mixins.ConfigObject):
     def addPage(self, page):
         """
         Add an additional page to the list of available pages.
-
-        Inputs:
-          page[pages.Page]: The object to insert into the list
         """
         if self.__initialized:
             msg = "The {} object has already been initialized, the addPage method must be called " \
                   "prior to initialization. Extension objects can add pages within the init() " \
-                  "method."
+                  "method. Otherwise, use the includePage() method from the translator object."
             raise exceptions.MooseDocsException(msg, type(self))
 
         self.__executioner.addPage(page)
 
     def removePage(self, page):
         """
-        Remove a page from the current list of available pages.
-
-        Inputs:
-          page[pages.Page]: The object to remove from the list
+        Remove a page from the current list of available pages. This can be safely called at any
+        point during the build.
         """
-        # if self.__initialized:
-        #     msg = "The {} object has already been initialized, the removePage method must be " \
-        #           "called prior to initialization."
-        #     raise exceptions.MooseDocsException(msg, type(self))
-
         self.__executioner.removePage(page)
 
     def getPages(self):
@@ -309,7 +297,6 @@ class Translator(mixins.ConfigObject):
 
     def __buildMarkdownFileCache(self):
         """Builds a list of markdown files, including the short-hand version for error reports."""
-
         self.__markdown_file_list = set()
         for local in [page.local for page in self.__executioner.getPages() if isinstance(page, pages.Source)]:
             self.__markdown_file_list.add(local)
@@ -324,8 +311,7 @@ class Translator(mixins.ConfigObject):
             self.executeMethod(method, args=(page, *args), **kwargs)
 
     def executeMethod(self, method, args=tuple(), extensions=None, log=False):
-        """Helper to call pre/post methods for extensions, reader, and renderer."""
-
+        """Helper to call pre/post or other methods from extension, reader, and renderer objects."""
         if log:
             LOG.info('Executing {} methods...'.format(method))
             t = time.time()

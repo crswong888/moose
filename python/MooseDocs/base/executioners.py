@@ -112,7 +112,6 @@ class Executioner(mixins.ConfigObject, mixins.TranslatorObject):
             # Setup destination and output extension
             node.base = destination
             if isinstance(node, pages.Source):
-                # print(node.get('active', True))
                 node.output_extension = self.translator.renderer.EXTENSION
 
             # Setup Page Config
@@ -214,11 +213,9 @@ class Executioner(mixins.ConfigObject, mixins.TranslatorObject):
         """Perform reading of page content."""
         content = None
         if node.get('active', True):
-            # print(node)
             self.translator.executePageMethod('preRead', node)
             content = self.translator.reader.read(node) if node.get('read', True) else ''
             self.translator.executePageMethod('postRead', node, args=(copy.copy(content),))
-            # print(node.get('active', True))
 
         return content
 
@@ -247,9 +244,6 @@ class Executioner(mixins.ConfigObject, mixins.TranslatorObject):
 
     def write(self, node, result):
         """Perform writing and call all associated callbacks for the supplied page."""
-
-        # print(node.get('active', True))
-        # print(node)
         if node.get('active', True):
             self.translator.executePageMethod('preWrite', node, args=(result,))
             if node.get('write', True):
@@ -486,7 +480,6 @@ class ParallelBarrier(Executioner):
 
         # READ
         for node in nodes:
-            # print(node.get('active', True))
             Executioner.setMutable(node, True)
             content = self.read(node)
             page_attributes[node.uid] = node.attributes
@@ -501,7 +494,6 @@ class ParallelBarrier(Executioner):
             content = local_content.pop(node.uid)
             Executioner.setMutable(node, True)
             mooseutils.recursive_update(node.attributes, page_attributes[node.uid])
-            # print(node.get('active', True))
             ast = self.tokenize(node, content)
             page_attributes[node.uid] = node.attributes
             Executioner.setMutable(node, False)
