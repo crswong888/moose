@@ -296,12 +296,8 @@ class NavigationExtension(Extension):
 
         container.insert(0, row)
 
-        print("\n_addBreadcrumbs():")
         parts = page.local.split(os.sep)
-        print(parts)
-        print(self.get('num_bases'))
         for i in range(self.get('num_bases'), len(parts)):
-            print('os.path.join(*parts[:i]) =', os.path.join(*parts[:i]))
             current = self.translator.findPage(lambda p: p.local == os.path.join(*parts[:i]))
 
             if isinstance(current, pages.Directory):

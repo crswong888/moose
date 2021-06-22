@@ -180,11 +180,8 @@ class Translator(mixins.ConfigObject):
                 self.__page_cache[arg] = items
 
         else:
-            print()
-            print('arg =', arg)
             items = [page for page in self.__executioner.getPages() if arg(page)]
-            print(any([arg(page) for page in self.__executioner.getPages()]))
-            print('items =', items)
+
         return items
 
     def findPage(self, arg, throw_on_zero=True, exact=False, warn_on_zero=False):
@@ -276,14 +273,14 @@ class Translator(mixins.ConfigObject):
     def includePage(self, page):
         """ """
         self.__assertInitialize()
-        if page.source in [p.source for p in self.getPages()]:
-            print('ERROR')
 
+        extensions = list()
         for ext in self.extensions:
             attr = '__{}__'.format(ext.name)
             if attr not in page.attributes.keys():
                 page[attr] = dict()
-        self.executePageMethod('initPage', page)
+                extensions.append(ext)
+        self.executePageMethod('initPage', page, extensions=extensions)
 
         self.__executioner.addPage(page, set_uid=False)
 
@@ -321,12 +318,12 @@ class Translator(mixins.ConfigObject):
             for i in range(n, 0, -1):
                 self.__markdown_file_list.add(os.path.join(*parts[n-i:n]))
 
-    def executePageMethod(self, method, page, args=tuple()):
+    def executePageMethod(self, method, page, args=tuple(), **kwargs):
         """Helper for calling per Page object methods."""
         if page.get(method, True):
-            self.executeMethod(method, args=(page, *args), log=False)
+            self.executeMethod(method, args=(page, *args), **kwargs)
 
-    def executeMethod(self, method, args=tuple(), log=False):
+    def executeMethod(self, method, args=tuple(), extensions=None, log=False):
         """Helper to call pre/post methods for extensions, reader, and renderer."""
 
         if log:
@@ -339,7 +336,7 @@ class Translator(mixins.ConfigObject):
             if method in self.__renderer.__TRANSLATOR_METHODS__:
                 Translator.callFunction(self.__renderer, method, args)
 
-        for ext in self.extensions:
+        for ext in (extensions if extensions is not None else self.extensions):
             if ext.active and (method in ext.__TRANSLATOR_METHODS__):
                 Translator.callFunction(ext, method, args)
 
