@@ -190,20 +190,30 @@ def main(options):
 ### All of this only works if the subsite doc directories are on the same ROOT_DIR
 ###
 ### If a subdocs content is already in the main config, error, warn, or just don't build subsite
+###
+### Do a link to main website menu key for all subtranslators? Assuming navigation is enabled...
+### This option could be set on/off from command line for build command
 
     print('\n*******************************************************************************')
     print('INITIALIZING', translator['destination'], '\n')
     translator.init()
 
+    # subconfigs = []
     # subconfigs = [os.path.join(MooseDocs.MOOSE_DIR, 'tutorials/darcy_thermo_mech/doc/config.yml')]
     # subconfigs = [os.path.join(MooseDocs.MOOSE_DIR, 'modules/tensor_mechanics/doc/config.yml')]
-    subconfigs = [os.path.join(MooseDocs.MOOSE_DIR, 'tutorials/darcy_thermo_mech/doc/config.yml'),
-                  os.path.join(MooseDocs.MOOSE_DIR, 'modules/tensor_mechanics/doc/config.yml')]
+    subconfigs = [os.path.join(MooseDocs.MOOSE_DIR, 'python/MooseDocs/test/subconfig/config.yml')]
+    # subconfigs = [os.path.join(MooseDocs.MOOSE_DIR, 'tutorials/darcy_thermo_mech/doc/config.yml'),
+    #               os.path.join(MooseDocs.MOOSE_DIR, 'modules/tensor_mechanics/doc/config.yml')]
+    # subconfigs = [os.path.join(MooseDocs.MOOSE_DIR, 'tutorials/darcy_thermo_mech/doc/config.yml'),
+    #               os.path.join(MooseDocs.MOOSE_DIR, 'python/MooseDocs/test/subconfig/config.yml')]
     subtranslators = [common.load_config(conf, **kwargs)[0] for conf in subconfigs]
 
+    # subsites = []
     # subsites = ['workshop']
     # subsites = ['tm_site']
-    subsites = ['workshop', 'tm_site']
+    subsites = ['subconfig']
+    # subsites = ['workshop', 'tm_site']
+    # subsites = ['workshop', 'subsite']
 
     content = [page for page in translator.getPages()]
     sources = [page.source for page in content]
@@ -216,9 +226,7 @@ def main(options):
 
         #
         for ext in trans.extensions:
-            if ext.name == 'navigation':
-                ext.update(**dict(num_bases=2))
-            elif ext.name == 'reveal':
+            if ext.name == 'reveal':
                 ext.update(**dict(translate=[os.path.join(site, 'index.md')]))
 
         print('\n*******************************************************************************')
@@ -228,16 +236,18 @@ def main(options):
         #
         subcontent[trans.uid] = list()
         for page in [p for p in trans.getPages()]:
-            if page.source in sources:
+            if page.source in sources or page.local == 'index.md':
                 trans.removePage(page)
             else:
-                page._fullname = os.path.join(site, page.local)
                 subcontent[trans.uid].append(page)
                 translator.includePage(page)
 
         #
         for page in content:
             trans.includePage(page)
+
+    # print("\nsubtranslators[1].findPage('modules/tensor_mechanics/index.md') =",
+    #       subtranslators[1].findPage('modules/tensor_mechanics/index.md'))
 
     print('\n*******************************************************************************\n')
 

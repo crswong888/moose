@@ -40,7 +40,6 @@ class NavigationExtension(Extension):
         config['name'] = (None, "The name of the website (e.g., MOOSE)")
         config['long-name'] = (None, "A long version of the page name that is used in the title, 'name' by default.")
         config['breadcrumbs'] = (True, "Toggle for the breadcrumb links at the top of page.")
-        config['num_bases'] = (1, "Number of directories to consider as roots for breadcrumb navigation.")
         config['sections'] = (True, "Group heading content into <section> tags.")
         config['scrollspy'] = (True, "Enable/disable the scrolling table of contents.")
         config['collapsible-sections'] = ([None, None, None, None, None, None],
@@ -324,7 +323,7 @@ class NavigationExtension(Extension):
         container.insert(0, row)
 
         parts = page.local.split(os.sep)
-        for i in range(self.get('num_bases'), len(parts)):
+        for i in range(1, len(parts)):
             current = self.translator.findPage(lambda p: p.local == os.path.join(*parts[:i]))
 
             if isinstance(current, pages.Directory):

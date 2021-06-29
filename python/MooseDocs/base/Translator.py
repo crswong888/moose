@@ -165,7 +165,10 @@ class Translator(mixins.ConfigObject):
                 func = lambda p: (p.local == arg) or \
                                  (not exact and p.local.endswith(os.sep + arg.lstrip(os.sep)))
                 items = [page for page in self.__executioner.getPages() if func(page)]
-                self.__page_cache[arg] = items
+
+                # if pages matched string 'arg', cache them so we don't have to repeat this search
+                if items:
+                    self.__page_cache[arg] = items
 
         else:
             items = [page for page in self.__executioner.getPages() if arg(page)]
