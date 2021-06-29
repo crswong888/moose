@@ -32,7 +32,9 @@ def command_line_options(subparser, parent):
                                   help='Convert markdown into HTML or LaTeX.')
 
     parser.add_argument('--config', default='config.yml',
-                        help="The configuration file.")
+                        help="The primary configuration file.")
+    parser.add_argument('--subconfigs', default=[], nargs='*',
+                        help="A list of additional configuration files to build pages from.")
     parser.add_argument('--args', default=None, type=lambda a: yaml.load(a, yaml.Loader),
                         help="YAML content to override configuration items supplied in file.")
     parser.add_argument('--disable', nargs='*', default=[],
@@ -44,8 +46,7 @@ def command_line_options(subparser, parent):
                              "(default: MooseDocs.base.ParallelBarrier).")
     parser.add_argument('--profile', action='store_true',
                         help="Build the pages with python profiling.")
-    parser.add_argument('--destination',
-                        default=None,
+    parser.add_argument('--destination', default=None,
                         help="Destination for writing build content.")
     parser.add_argument('--serve', action='store_true',
                         help="Create a local live server.")
@@ -170,13 +171,6 @@ def main(options):
     if options.args is not None:
         mooseutils.recursive_update(kwargs, options.args)
 
-    # Create translator, provide kwargs to override content of file
-    translator, _ = common.load_config(options.config, **kwargs)
-    if options.destination:
-        translator.update(destination=mooseutils.eval_path(options.destination))
-    if options.profile:
-        translator.executioner.update(profile=True)
-
 ####################################################################################################
 ### MAYBE ALL OF THIS CAN BE MOVED TO LIKE A base.subsite KIND OF THING...
 ###
@@ -189,67 +183,86 @@ def main(options):
 ###
 ### All of this only works if the subsite doc directories are on the same ROOT_DIR
 ###
-### If a subdocs content is already in the main config, error, warn, or just don't build subsite
+### If a subdocs content is already in the primary config, error, warn, or just don't build subsite
 ###
-### Do a link to main website menu key for all subtranslators? Assuming navigation is enabled...
+### Do a link to primary website menu key for all subtranslators? Assuming navigation is enabled...
 ### This option could be set on/off from command line for build command
 
-    print('\n*******************************************************************************')
-    print('INITIALIZING', translator['destination'], '\n')
-    translator.init()
+    # Create translators, provide kwargs to override content of the files
+    # translators, contents, _ = common.load_config([options.config] + options.subconfigs, **kwargs)
+    translators, contents, _ = common.load_config([options.config] + options.subconfigs, **kwargs)
 
-    # subconfigs = []
-    # subconfigs = [os.path.join(MooseDocs.MOOSE_DIR, 'tutorials/darcy_thermo_mech/doc/config.yml')]
-    # subconfigs = [os.path.join(MooseDocs.MOOSE_DIR, 'modules/tensor_mechanics/doc/config.yml')]
-    subconfigs = [os.path.join(MooseDocs.MOOSE_DIR, 'python/MooseDocs/test/subconfig/config.yml')]
-    # subconfigs = [os.path.join(MooseDocs.MOOSE_DIR, 'tutorials/darcy_thermo_mech/doc/config.yml'),
-    #               os.path.join(MooseDocs.MOOSE_DIR, 'modules/tensor_mechanics/doc/config.yml')]
-    # subconfigs = [os.path.join(MooseDocs.MOOSE_DIR, 'tutorials/darcy_thermo_mech/doc/config.yml'),
-    #               os.path.join(MooseDocs.MOOSE_DIR, 'python/MooseDocs/test/subconfig/config.yml')]
-    subtranslators = [common.load_config(conf, **kwargs)[0] for conf in subconfigs]
+    #
+    primary = translators[0]
+    if options.destination:
+        primary.update(destination=mooseutils.eval_path(options.destination))
+    if options.profile:
+        primary.executioner.update(profile=True)
+    primary.init()
 
-    # subsites = []
-    # subsites = ['workshop']
-    # subsites = ['tm_site']
-    subsites = ['subconfig']
-    # subsites = ['workshop', 'tm_site']
-    # subsites = ['workshop', 'subsite']
-
-    content = [page for page in translator.getPages()]
-    sources = [page.source for page in content]
-
-    subcontent = dict()
-    for trans, site in zip(subtranslators, subsites):
-        trans.update(destination=translator['destination'])
-        if options.profile:
-            trans.executioner.update(profile=True)
-
-        #
-        for ext in trans.extensions:
-            if ext.name == 'reveal':
-                ext.update(**dict(translate=[os.path.join(site, 'index.md')]))
-
+    #
+    for translator, content in zip(translators[1:], contents[1:]):
         print('\n*******************************************************************************')
-        print('INITIALIZING', os.path.join(translator['destination'], site), '\n')
-        trans.init()
 
-        #
-        subcontent[trans.uid] = list()
-        for page in [p for p in trans.getPages()]:
-            if page.source in sources or page.local == 'index.md':
-                trans.removePage(page)
-            else:
-                subcontent[trans.uid].append(page)
-                translator.includePage(page)
-
-        #
-        for page in content:
-            trans.includePage(page)
-
-    # print("\nsubtranslators[1].findPage('modules/tensor_mechanics/index.md') =",
-    #       subtranslators[1].findPage('modules/tensor_mechanics/index.md'))
+        translator.update(destination=primary['destination'], profile=primary['profile'])
+        translator.init(content)
 
     print('\n*******************************************************************************\n')
+
+    # translator = translators[0]
+    # subtranslators = translators[1:]
+    # content = contents[0]
+    # subcontents = contents[1:]
+
+
+    # content = content[0]
+    # sources = [page.local for page in content]
+    #
+    # translator = translator[0]
+    #
+    # if options.destination:
+    #     translator.update(destination=mooseutils.eval_path(options.destination))
+    # if options.profile:
+    #     translator.executioner.update(profile=True)
+    #
+    # print('\n*******************************************************************************')
+    # translator.init(content)
+    #
+    # # subconfigs = []
+    # # subconfigs = [os.path.join(MooseDocs.MOOSE_DIR, 'tutorials/darcy_thermo_mech/doc/config.yml')]
+    # # subconfigs = [os.path.join(MooseDocs.MOOSE_DIR, 'modules/tensor_mechanics/doc/config.yml')]
+    # # subconfigs = [os.path.join(MooseDocs.MOOSE_DIR, 'python/MooseDocs/test/subconfig/config.yml')]
+    # # subconfigs = [os.path.join(MooseDocs.MOOSE_DIR, 'tutorials/darcy_thermo_mech/doc/config.yml'),
+    # #               os.path.join(MooseDocs.MOOSE_DIR, 'modules/tensor_mechanics/doc/config.yml')]
+    # subconfigs = [os.path.join(MooseDocs.MOOSE_DIR, 'tutorials/darcy_thermo_mech/doc/config.yml'),
+    #               os.path.join(MooseDocs.MOOSE_DIR, 'python/MooseDocs/test/subconfig/config.yml')]
+    # subtranslators = [common.load_config([conf], **kwargs)[0] for conf in subconfigs]
+    #
+    # subtranslators = [trans[0] for trans in subtranslators]
+    #
+    # subcontent = dict()
+    # for trans in subtranslators:
+    #     trans.update(destination=translator['destination'])
+    #     if options.profile:
+    #         trans.executioner.update(profile=True)
+    #
+    #     print('\n*******************************************************************************')
+    #     trans.init()
+    #
+    #     #
+    #     subcontent[trans.uid] = list()
+    #     for page in [p for p in trans.getPages()]:
+    #         if page.local in sources:
+    #             trans.removePage(page)
+    #         else:
+    #             subcontent[trans.uid].append(page)
+    #             translator.includePage(page)
+    #
+    #     #
+    #     for page in content:
+    #         trans.includePage(page)
+    #
+    # print('\n*******************************************************************************\n')
 
 ####################################################################################################
 
@@ -261,15 +274,15 @@ def main(options):
         home = 'http://127.0.0.1:{}'.format(options.port)
 
     if home is not None:
-        for ext in translator.extensions:
+        for ext in primary.extensions:
             if 'home' in ext:
                 ext.update(home=home)
 
-    # Dump page tree
+    # Dump page tree from primary translator
     if options.dump:
-        for page in translator.getPages():
+        for page in primary.getPages():
             print('{}: {}'.format(page.local, page.source))
-        for ext in translator.extensions:
+        for ext in primary.extensions:
             if isinstance(ext, MooseDocs.extensions.appsyntax.AppSyntaxExtension):
                 ext.preExecute()
                 print(ext.syntax)
@@ -281,34 +294,42 @@ def main(options):
     else:
         options.clean = options.clean.lower() in ['true', 'yes', '1']
 
-    if options.clean and os.path.exists(translator['destination']):
+    if options.clean and os.path.exists(primary['destination']):
         log = logging.getLogger('MooseDocs.build')
-        log.info("Cleaning destination %s", translator['destination'])
-        shutil.rmtree(translator['destination'])
+        log.info("Cleaning destination %s", primary['destination'])
+        shutil.rmtree(primary['destination'])
 
-    # Perform build
-    if options.files:
-        nodes = []
-        for filename in options.files:
-            nodes += translator.findPages(filename)
-        translator.execute(nodes, options.num_threads)
-    else:
-        translator.execute(content, options.num_threads)
+    #
+    for translator, content in zip(translators, contents):
+        if options.files:
+            func = lambda p: any([file.endswith(p) for file in options.files])
+            translator.execute(translator.findPages(func), options.num_threads)
+        else:
+            translator.execute(content, options.num_threads)
 
-####################################################################################################
-### Do I need to implement the options.files for the subtranslatorss somehow here?
-
-    for trans in subtranslators:
-        print('\n*******************************************************************************\n')
-        trans.execute(subcontent[trans.uid], options.num_threads)
-
-    print('\n*******************************************************************************\n')
-
-####################################################################################################
+#     # Perform build
+#     if options.files:
+#         nodes = []
+#         for filename in options.files:
+#             nodes += translator.findPages(filename)
+#         translator.execute(nodes, options.num_threads)
+#     else:
+#         translator.execute(content, options.num_threads)
+#
+# ####################################################################################################
+# ### Do I need to implement the options.files for the subtranslatorss somehow here?
+#
+#     for trans, cont in zip(subtranslators, subcontents):
+#         print('\n*******************************************************************************\n')
+#         trans.execute(cont, options.num_threads)
+#
+#     print('\n*******************************************************************************\n')
+#
+# ####################################################################################################
 
     if options.serve:
-        watcher = MooseDocsWatcher(translator, options)
+        watcher = MooseDocsWatcher(primary, options)
         server = livereload.Server(watcher=watcher)
-        server.serve(root=translator['destination'], host=options.host, port=options.port)
+        server.serve(root=primary['destination'], host=options.host, port=options.port)
 
     return 0

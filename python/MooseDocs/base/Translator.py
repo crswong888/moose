@@ -114,7 +114,7 @@ class Translator(mixins.ConfigObject):
         """Return the destination directory."""
         return self.get('destination')
 
-    def addPage(self, page):
+    def addPage(self, page, set_uid=True):
         """
         Add an additional page to the list of available pages.
         """
@@ -124,7 +124,7 @@ class Translator(mixins.ConfigObject):
                   "method. Otherwise, use the includePage() method from the translator object."
             raise exceptions.MooseDocsException(msg, type(self))
 
-        self.__executioner.addPage(page)
+        self.__executioner.addPage(page, set_uid)
 
     def removePage(self, page):
         """
@@ -215,16 +215,13 @@ class Translator(mixins.ConfigObject):
             raise exceptions.MooseDocsException(msg)
         return nodes[0]
 
-    def init(self):
+    def init(self, nodes=None):
         """
         Initialize the translator with the output destination for the converted content.
 
         This method also initializes all the various items within the translator for performing
         the conversion. It is required to allow the build command to modify configuration items
         (i.e., the 'destination' option) prior to setting up the extensions.
-
-        Inputs:
-            destination[str]: The path to the output directory.
         """
         if self.__initialized:
             msg = "The {} object has already been initialized, this method should not " \
@@ -258,7 +255,7 @@ class Translator(mixins.ConfigObject):
             self.__checkRequires(ext)
 
         # Initialize the Page objects
-        self.__executioner.init(self.get("destination"))
+        self.__executioner.init(self.destination, nodes)
         self.__initialized = True
 
     def includePage(self, page):
@@ -273,7 +270,7 @@ class Translator(mixins.ConfigObject):
                 extensions.append(ext)
         self.executePageMethod('initPage', page, extensions=extensions)
 
-        self.__executioner.addPage(page, set_uid=False)
+        self.__executioner.addPage(page, False)
 
     def execute(self, nodes=None, num_threads=1):
         """Perform build for all pages, see executioners."""

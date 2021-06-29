@@ -59,31 +59,53 @@ DEFAULT_RENDERER = 'MooseDocs.base.MarkdownReader'
 DEFAULT_TRANSLATOR = 'MooseDocs.base.Translator'
 DEFAULT_EXECUTIONER = 'MooseDocs.base.ParallelBarrier'
 
-def load_config(filename, **kwargs):
+def load_config(filenames, **kwargs):
     """
-    Read the config.yml file and create the Translator object.
+    Read the config.yml file(s) and create the Translator object.
     """
-    config = yaml_load(filename, root=MooseDocs.ROOT_DIR)
+    configs = [yaml_load(file, root=MooseDocs.ROOT_DIR) for file in filenames]
+    translators = []
+    for config in configs:
+        # Replace 'default' and 'disable' key in Extensions to allow for recursive_update to accept command line
+        for key in config.get('Extensions', dict()).keys():
+            if config['Extensions'][key] == 'default':
+                config['Extensions'][key] = dict()
+            if config['Extensions'][key] == 'disable':
+                config['Extensions'][key] = dict(active=False)
 
-    # Replace 'default' and 'disable' key in Extensions to allow for recursive_update to accept command line
-    for key in config.get('Extensions', dict()).keys():
-        if config['Extensions'][key] == 'default':
-            config['Extensions'][key] = dict()
-        if config['Extensions'][key] == 'disable':
-            config['Extensions'][key] = dict(active=False)
+        # Apply command-line key value pairs
+        recursive_update(config, kwargs)
 
-    # Apply command-line key value pairs
-    recursive_update(config, kwargs)
+        # configure extensions, reader, renderer, content, & executioner and load into a translator
+        extensions = _yaml_load_extensions(config)
+        reader = _yaml_load_object('Reader', config, DEFAULT_READER)
+        renderer = _yaml_load_object('Renderer', config, DEFAULT_RENDERER)
+        content = _yaml_load_content(config, reader.EXTENSIONS)
+        executioner = _yaml_load_object('Executioner', config, DEFAULT_EXECUTIONER)
+        translators.append(_yaml_load_object('Translator', config, DEFAULT_TRANSLATOR,
+                                             content, reader, renderer, extensions, executioner))
 
-    extensions = _yaml_load_extensions(config)
-    reader = _yaml_load_object('Reader', config, DEFAULT_READER)
-    renderer = _yaml_load_object('Renderer', config, DEFAULT_RENDERER)
-    content = _yaml_load_content(config, reader.EXTENSIONS)
-    executioner = _yaml_load_object('Executioner', config, DEFAULT_EXECUTIONER)
-    translator = _yaml_load_object('Translator', config, DEFAULT_TRANSLATOR,
-                                   content, reader, renderer, extensions, executioner)
+    #
+    # contents = dict(translators[0].uid=[page for page in translators[0].getPages()]) # might more easily just be a list of lists
+    # main_pages = [page.local for page in contents[translators[0].uid]]
+    contents = [[page for page in translators[0].getPages()]]
+    main_pages = [page.local for page in contents[0]]
+    for translator in translators[1:]:
+        # contents[translator.uid] = list()
+        contents.append(list())
+        for page in [p for p in translator.getPages()]:
+            if page.local in main_pages:
+                translator.removePage(page)
+            else:
+                contents[-1].append(page)
+                translators[0].addPage(page, False)
 
-    return translator, config
+        #
+        for page in contents[0]:
+            translator.addPage(page, False)
+
+    return translators, contents, configs
+    # return translators, configs
 
 def load_extensions(ext_list, ext_configs=None):
     """
