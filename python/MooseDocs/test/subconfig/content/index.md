@@ -1,5 +1,3 @@
-<!-- !config navigation breadcrumbs=False -->
+!config navigation breadcrumbs=False
 
-<!-- !include subsite/index.md -->
-
-[subsite/index.md]
+!include subsite/index.md
