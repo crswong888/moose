@@ -1,5 +1,8 @@
 # MOOSE Workshop
 
+!style halign=center fontsize=150%
+!datetime today format=%B %Y
+
 !style halign=center
 www.mooseframework.org
 
