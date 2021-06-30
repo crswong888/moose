@@ -22,7 +22,7 @@ Extensions:
     MooseDocs.extensions.config: default
     MooseDocs.extensions.heading: default
     MooseDocs.extensions.navigation:
-        name: MOOSEDocs Subsite
+        name: MooseDocs Subsite
         home: /subsite/index.md
     MooseDocs.extensions.comment: default
     MooseDocs.extensions.modal: default
