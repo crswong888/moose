@@ -73,10 +73,10 @@ class Translator(mixins.ConfigObject):
         if executioner is None:
             self.__executioner = ParallelBarrier()
 
-        # Populate the content list and set the translator key for the page objects
+        # Populate the content list and set the translator_uid key for the page objects
         for p in content:
             self.addPage(p)
-            p.translator = self
+            p.translator_uid = self.__unique_id
         # Caching for page searches (see findPages)
         self.__page_cache = dict()
 
@@ -143,8 +143,6 @@ class Translator(mixins.ConfigObject):
         if dest is not None:
             kwargs['destination'] = mooseutils.eval_path(dest)
         mixins.ConfigObject.update(self, **kwargs)
-
-        # if any other translator objects used the same destination, this would be a problem
 
     def findPages(self, arg, exact=False):
         """
@@ -217,7 +215,8 @@ class Translator(mixins.ConfigObject):
 
     def init(self, nodes=None):
         """
-        Initialize the translator with the output destination for the converted content.
+        Initialize the translator with the output destination for the converted content. The nodes
+        argument serves the same purpose as for the execute() method.
 
         This method also initializes all the various items within the translator for performing
         the conversion. It is required to allow the build command to modify configuration items

@@ -129,7 +129,7 @@ class Executioner(mixins.ConfigObject, mixins.TranslatorObject):
         self._page_objects.append(page)
 
     def removePage(self, page):
-        """Remove a Page object."""
+        """Remove a Page object from the current list."""
         for node in self._page_objects:
             if node._Page__unique_id > page._Page__unique_id:
                 node._Page__unique_id -= 1
@@ -243,6 +243,7 @@ class Executioner(mixins.ConfigObject, mixins.TranslatorObject):
 
     def write(self, node, result):
         """Perform writing and call all associated callbacks for the supplied page."""
+
         if node.get('active', True):
             self.translator.executePageMethod('preWrite', node, args=(result,))
             if node.get('write', True):

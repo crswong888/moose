@@ -17,7 +17,6 @@ import subprocess
 import shutil
 import yaml
 import livereload
-
 import mooseutils
 from mooseutils.yaml_load import yaml_load
 
@@ -165,7 +164,7 @@ def main(options):
         options.disable += ['appsyntax', 'navigation', 'sqa', 'civet', 'gitutils']
     else:
         options.disable += ['sqa', 'civet', 'gitutils']
-        
+
     for name in options.disable:
         ext = '.'.join(['MooseDocs', 'extensions', name.lower()])
         kwargs['Extensions'][ext] = dict(active=False)
@@ -174,11 +173,11 @@ def main(options):
     if options.args is not None:
         mooseutils.recursive_update(kwargs, options.args)
 
-    # Create translators, provide kwargs to override content of the files
+    # Create translators for the primary and sub configs, provide kwargs to override the configs
     configs = [options.config] + options.subconfigs
     translators, contents, _ = common.load_configs(configs, **kwargs)
 
-    #
+    # Initialize the primary (first) translator, including content from any subconfigs
     primary = translators[0]
     if options.destination:
         primary.update(destination=mooseutils.eval_path(options.destination))
@@ -186,7 +185,7 @@ def main(options):
         primary.executioner.update(profile=True)
     primary.init()
 
-    #
+    # For all translators loaded from subconfigs, initialize only content they're responsible for
     for idx, translator in enumerate(translators[1:], 1):
         LOG.info('Initializing translator object from {}'.format(configs[idx]))
         translator.update(destination=primary['destination'], profile=primary['profile'])
@@ -224,7 +223,7 @@ def main(options):
         LOG.info("Cleaning destination %s", primary['destination'])
         shutil.rmtree(primary['destination'])
 
-    #
+    # Execute all translators to build the content each is responsible for
     for idx, translator in enumerate(translators):
         if options.subconfigs:
             LOG.info('Building content from {}'.format(configs[idx]))
@@ -235,7 +234,9 @@ def main(options):
         else:
             translator.execute(contents[idx], options.num_threads)
 
+    # Run live server and watch for content changes
     #
+    # TODO: implement routines to handle case of multiple translators
     if options.serve:
         watcher = MooseDocsWatcher(primary, options)
         server = livereload.Server(watcher=watcher)

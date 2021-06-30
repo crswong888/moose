@@ -54,7 +54,7 @@ class CommandExtension(Extension):
                 if pair in CommandExtension.EXTENSION_COMMANDS[uid]:
                     msg = "A CommandComponent object exists with the command '{}' and " \
                           "subcommand '{}'."
-                    raise common.exceptions.MooseDocsException(msg, pair[1], pair[2])
+                    raise common.exceptions.MooseDocsException(msg, pair[0], pair[1])
 
                 CommandExtension.EXTENSION_COMMANDS[uid][pair] = command
 
@@ -87,7 +87,7 @@ class CommandBase(components.ReaderComponent):
         components.ReaderComponent.__init__(self, *args, **kwargs)
 
     def createToken(self, parent, info, page):
-        uid = page.translator.uid
+        uid = page.translator_uid
         cmd = (info['command'], info['subcommand'])
         settings = info['settings']
 

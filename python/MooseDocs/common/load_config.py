@@ -87,7 +87,15 @@ def load_config(filename, **kwargs):
 
 def load_configs(filenames, **kwargs):
     """
-    Read the config.yml files and create the Translator objects.
+    Read the config.yml files listed in filenames and create unique Translator objects for each.
+
+    The primary (first) configuration file is treated specially in that the content identified by all
+    others is pooled into its corresponding Translator object. For sub (non-first) configurations,
+    only content from the primary configuration is added to its own. The kwargs are applied the same
+    to all configurations.
+
+    The contents ouput lists the pages that each corresponding Translator object is responsible for
+    building. The primary translator is responsible for building any redundant content.
     """
     translators = list()
     configurations = list()
@@ -96,23 +104,22 @@ def load_configs(filenames, **kwargs):
         translators.append(trans)
         configurations.append(config)
 
-    #
+    # Exchange content between primary translator and all subtranslators
     contents = [[page for page in translators[0].getPages()]]
-    main_pages = [page.local for page in contents[0]]
+    primary_content = [page.local for page in contents[0]]
     for translator in translators[1:]:
         contents.append(list())
         for page in [p for p in translator.getPages()]:
-            if page.local in main_pages:
+            if page.local in primary_content:
                 translator.removePage(page)
             else:
                 contents[-1].append(page)
                 translators[0].addPage(page, False)
 
-        #
+        # Add content from the primary translator
         for page in contents[0]:
             translator.addPage(page, False)
 
-    #
     return translators, contents, configurations
 
 def load_extensions(ext_list, ext_configs=None):
