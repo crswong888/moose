@@ -64,7 +64,7 @@ def load_config(filenames, **kwargs):
     Read the config.yml file(s) and create the Translator object.
     """
     configs = [yaml_load(file, root=MooseDocs.ROOT_DIR) for file in filenames]
-    translators = []
+    translators = list()
     for config in configs:
         # Replace 'default' and 'disable' key in Extensions to allow for recursive_update to accept command line
         for key in config.get('Extensions', dict()).keys():
@@ -86,12 +86,9 @@ def load_config(filenames, **kwargs):
                                              content, reader, renderer, extensions, executioner))
 
     #
-    # contents = dict(translators[0].uid=[page for page in translators[0].getPages()]) # might more easily just be a list of lists
-    # main_pages = [page.local for page in contents[translators[0].uid]]
     contents = [[page for page in translators[0].getPages()]]
     main_pages = [page.local for page in contents[0]]
     for translator in translators[1:]:
-        # contents[translator.uid] = list()
         contents.append(list())
         for page in [p for p in translator.getPages()]:
             if page.local in main_pages:
@@ -104,8 +101,8 @@ def load_config(filenames, **kwargs):
         for page in contents[0]:
             translator.addPage(page, False)
 
+    #
     return translators, contents, configs
-    # return translators, configs
 
 def load_extensions(ext_list, ext_configs=None):
     """
@@ -195,7 +192,6 @@ def _yaml_load_object(name, config, default, *args):
     except NameError:
         msg = "ERROR: The %s block must contain a valid object name."
         LOG.error(msg, name)
-
 
 def _yaml_load_content(config, in_ext):
     """Load the 'Content' section."""
