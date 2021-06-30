@@ -176,7 +176,7 @@ def main(options):
 
     # Create translators, provide kwargs to override content of the files
     configs = [options.config] + options.subconfigs
-    translators, contents, _ = common.load_config(configs, **kwargs)
+    translators, contents, _ = common.load_configs(configs, **kwargs)
 
     #
     primary = translators[0]

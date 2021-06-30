@@ -258,20 +258,6 @@ class Translator(mixins.ConfigObject):
         self.__executioner.init(self.destination, nodes)
         self.__initialized = True
 
-    def includePage(self, page):
-        """ """
-        self.__assertInitialize()
-
-        extensions = list()
-        for ext in self.extensions:
-            attr = '__{}__'.format(ext.name)
-            if attr not in page.attributes.keys():
-                page[attr] = dict()
-                extensions.append(ext)
-        self.executePageMethod('initPage', page, extensions=extensions)
-
-        self.__executioner.addPage(page, False)
-
     def execute(self, nodes=None, num_threads=1):
         """Perform build for all pages, see executioners."""
         self.__assertInitialize()
